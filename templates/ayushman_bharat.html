@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Ayushman Bharat in Nagpur | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><span class="eyebrow">OFFICIAL SCHEME INFORMATION</span><h1>Ayushman Bharat in Nagpur</h1><p>Find official scheme resources and review hospital records only when participation and relevant care are verified in this directory.</p></div>
+</section>
+
+<section class="ayushman-resources" aria-label="Official scheme resources">
+  <article class="card scheme-resource">
+    <span class="eyebrow">PM-JAY BENEFICIARY SERVICES</span>
+    <h2>Check eligibility</h2>
+    <p>Use the Government of India beneficiary portal. JeevanSetu AI does not check or determine scheme eligibility.</p>
+    <a class="button button-primary" href="https://beneficiary.nha.gov.in/" target="_blank" rel="noopener noreferrer">Open official beneficiary portal ↗</a>
+  </article>
+  <article class="card scheme-resource">
+    <span class="eyebrow">MAHARASHTRA</span>
+    <h2>MJPJAY information</h2>
+    <p>Refer to the official Maharashtra scheme website for current program guidance and contacts.</p>
+    <a class="button button-outline" href="https://www.jeevandayee.gov.in/" target="_blank" rel="noopener noreferrer">Open official MJPJAY website ↗</a>
+  </article>
+  <article class="card scheme-resource scheme-helpline">
+    <span class="eyebrow">OFFICIAL HELPLINE</span>
+    <h2><a href="tel:14555">14555</a></h2>
+    <p>Call the Ayushman Bharat PM-JAY helpline to ask about official beneficiary support.</p>
+  </article>
+</section>
+
+<div class="notice-panel ayushman-notice">
+  <strong>Confirm before making care decisions</strong>
+  <p>Confirm eligibility, covered procedures, any required authorization, and current hospital participation directly with the official scheme or hospital. A directory entry is not a guarantee of cashless treatment, coverage, admission, or availability.</p>
+</div>
+<div class="notice-panel notice-compact ayushman-privacy">
+  <strong>Do not share identity documents here</strong>
+  <p>This demo cannot officially verify scheme eligibility. Do not upload an Ayushman card or Aadhaar, or enter government identity numbers or other sensitive identity details on this website. Patient registration is separate from scheme eligibility.</p>
+</div>
+
+<section class="section-block">
+  <div class="section-heading"><div><span class="eyebrow">NAGPUR DIRECTORY</span><h2>Verified scheme-participating hospitals</h2><p>Only records with verified hospital details, verified scheme participation, and matching specialties are shown.</p></div></div>
+  <form method="get" action="{{ url_for('ayushman_bharat') }}" class="card filter-form">
+    <label>Scheme
+      <select name="scheme">
+        <option value="">PM-JAY and MJPJAY</option>
+        <option value="PM-JAY" {% if filters.scheme == 'PM-JAY' %}selected{% endif %}>PM-JAY</option>
+        <option value="MJPJAY" {% if filters.scheme == 'MJPJAY' %}selected{% endif %}>MJPJAY</option>
+      </select>
+    </label>
+    <label>Care specialty
+      <select name="care">
+        <option value="">All supported specialties</option>
+        <option value="cancer" {% if filters.care == 'cancer' %}selected{% endif %}>Cancer / oncology</option>
+        <option value="dialysis" {% if filters.care == 'dialysis' %}selected{% endif %}>Dialysis / kidney care</option>
+      </select>
+    </label>
+    <label>Hospital name<input name="name" value="{{ filters.name }}" maxlength="200" placeholder="Search hospital name"></label>
+    <label>Area<input name="area" value="{{ filters.area }}" maxlength="150" placeholder="Area or address"></label>
+    <button class="button button-primary" type="submit">Filter verified hospitals</button>
+    <a class="button button-outline" href="{{ url_for('ayushman_bharat') }}">Clear</a>
+  </form>
+  {% if records %}
+    <div class="result-grid ayushman-results">
+      {% for item in records %}
+      <article class="card result-card">
+        <div class="result-top"><span class="status status-confirmed">Scheme participation verified</span><span class="status status-neutral">{{ item.scheme_name }}</span></div>
+        <h3>{{ item.name }}</h3>
+        <p>{{ item.address or 'Address not supplied' }}{% if item.area %}, {{ item.area }}{% endif %}, {{ item.city }}</p>
+        <dl class="detail-list">
+          <div><dt>Relevant specialties</dt><dd>{{ item.specialties }}</dd></div>
+          <div><dt>Phone</dt><dd>{% if item.phone %}<a href="tel:{{ item.phone|replace(' ','')|replace('(','')|replace(')','')|replace(';','')|replace('/','') }}">{{ item.phone }}</a>{% else %}Not supplied{% endif %}</dd></div>
+          <div><dt>Last verified</dt><dd>{{ item.last_verified }}</dd></div>
+        </dl>
+        <p class="small-note">Scheme source: <a href="{{ item.scheme_source_url }}" target="_blank" rel="noopener noreferrer">View official source ↗</a></p>
+        <p class="small-note">Facility source: <a href="{{ item.facility_source_url }}" target="_blank" rel="noopener noreferrer">View facility source ↗</a></p>
+        <p class="small-note">Call the hospital and scheme to confirm the service, eligibility, authorization, and current participation. No cashless treatment is promised.</p>
+      </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state card ayushman-empty"><h3>No verified matches are currently listed</h3><p>The supplied Nagpur workbook does not provide PM-JAY/MJPJAY empanelment evidence, so its facilities are not presented as scheme-empanelled. Use the official links or helpline above to confirm current participation.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

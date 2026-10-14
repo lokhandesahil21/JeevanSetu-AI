@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}AI Health Assistant | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><span class="eyebrow">AI HEALTH ASSISTANT</span><h1>Ask for health information</h1><p>Get general information in English, Hindi, or Marathi, or search the sourced Nagpur directory.</p></div>
+</section>
+<div class="notice-panel ai-page-notice">
+  <strong>AI responses are informational, not medical advice</strong>
+  <p>This assistant cannot diagnose, determine cancer stage, prescribe treatment, or confirm appointment availability. For urgent concerns, contact emergency services or go to an emergency department. Messages are sent to OpenAI. Only attach reports with your explicit consent; avoid names, Aadhaar numbers, registration IDs, and other identifying details.</p>
+</div>
+<section class="card ai-page-chat" aria-label="Health assistant conversation">
+  <div class="ai-chat-messages" aria-live="polite" aria-relevant="additions text">
+    <p class="ai-chat-bubble ai-chat-assistant">Hello. Ask a general question, select hospital search, or attach a readable text PDF for an informational explanation. I cannot replace your clinician.</p>
+    <p class="ai-chat-status" role="status"></p>
+  </div>
+  {% set assistant_form_id = 'page-ai-chat' %}
+  {% set assistant_compact = false %}
+  {% include 'ai_chat_form.html' %}
+</section>
+{% endblock %}

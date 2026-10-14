@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Doctors | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">CLINICIAN APPOINTMENTS</span><h1>Verified provider availability</h1><p>Search sourced clinician records in the <a href="{{ url_for('directory', category='doctor') }}">Nagpur directory</a>.</p></div>{% if not g.user or g.user.role == 'patient' %}<a class="button button-primary" href="{{ url_for('appointments') }}">My appointments →</a>{% elif g.user.role == 'doctor' %}<a class="button button-primary" href="{{ url_for('doctor_appointments') }}">Doctor schedule →</a>{% endif %}</section>
+<div class="notice-panel notice-compact"><strong>Only verified, provider-published appointment times appear below.</strong><p>A listing alone does not provide appointment availability. Requests are not external bookings and remain awaiting provider confirmation until a linked provider updates their status.</p></div>
+<section class="section-block"><div class="result-grid">
+{% for doctor in doctors %}
+  <article class="card result-card doctor-card">
+    <div class="doctor-avatar" aria-hidden="true">{{ doctor.name[4:5] }}</div>
+    <span class="status status-confirmed">Verified provider</span>
+    <h2>{{ doctor.name }}</h2><p class="specialty">{{ doctor.specialty }}</p>
+    <dl class="detail-list"><div><dt>Hospital</dt><dd>{{ doctor.hospital_name }}</dd></div><div><dt>Experience</dt><dd>{{ doctor.experience_years }} years</dd></div><div><dt>Consultation</dt><dd>{{ doctor.consultation_mode }}</dd></div></dl>
+  </article>
+{% endfor %}
+</div></section>
+<section class="section-block"><div class="section-heading"><div><span class="eyebrow">PROVIDER-PUBLISHED AVAILABILITY</span><h2>Available slots</h2></div></div>
+{% if slots %}
+<div class="card table-wrap"><table><thead><tr><th>Doctor</th><th>Specialty</th><th>Time</th><th>Slot</th></tr></thead><tbody>
+{% for slot in slots %}<tr><td>{{ slot.doctor_name }}</td><td>{{ slot.specialty }}</td><td>{{ slot.slot_at|replace('T', ' at ') }}</td><td><span class="status status-confirmed">Provider supplied</span></td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<div class="empty-state card"><h3>No verified provider has published an appointment slot</h3><p>There is no fabricated appointment availability. Contact a provider directly or check back when a verified provider publishes times.</p></div>{% endif %}
+</section>
+{% endblock %}

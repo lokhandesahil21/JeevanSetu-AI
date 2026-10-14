@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Medical Reports | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">PRIVATE REPORT SPACE</span><h1>Medical report assistant</h1><p>Upload a report to store it privately and review extracted text where available.</p></div></section>
+<div class="notice-panel notice-compact"><strong>{{ report_notice }}</strong><p>This tool does not diagnose disease or predict cancer stage. Any stage must be entered or verified by an authorized clinician. Demo mode never invents report results.</p></div>
+<section class="two-column section-block">
+  <div class="card form-card"><span class="eyebrow">SECURE UPLOAD</span><h2>Add a report</h2><p class="form-hint">PDF, PNG, JPG, or JPEG · Maximum 8 MB. Files are stored in a private local folder and shown only to your account.</p>
+    <form method="post" enctype="multipart/form-data" class="stack-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label>Choose report<input type="file" name="report" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" required></label>
+      <label>Explanation language<select name="language"><option value="en">English</option><option value="hi">हिन्दी</option><option value="mr">मराठी</option></select></label>
+      <label class="checkbox-label"><input type="checkbox" name="consent" value="yes" required><span>I consent to storing this report in my private account and extracting readable text on this device.</span></label>
+      {% if ai_configured %}<label class="checkbox-label checkbox-warning"><input type="checkbox" name="external_ai_consent" value="yes"><span>Optional: I separately consent to sending extracted report text to the configured external AI service. This may include sensitive health information.</span></label>{% else %}<p class="form-hint">External AI is not configured. Demo mode keeps report text on this device.</p>{% endif %}
+      <button class="button button-primary button-full" type="submit">Upload report securely</button>
+    </form>
+  </div>
+  <div class="card report-help"><span class="feature-icon teal">i</span><h2>What to expect</h2><ul class="check-list"><li>Text-based PDFs may allow test names, values, and printed ranges to be extracted.</li><li>Images and scanned PDFs may be unreadable in this demo; no OCR is claimed.</li><li>Only the reference range printed by the laboratory is used for any comparison.</li><li>Talk with a qualified healthcare professional before acting on report information.</li></ul></div>
+</section>
+<section class="section-block"><div class="section-heading"><div><span class="eyebrow">ONLY YOU CAN VIEW THESE</span><h2>Your uploaded reports</h2></div></div>
+{% if reports %}
+<div class="report-list">{% for report in reports %}
+  <article class="card report-card"><div class="result-top"><div><h3>{{ report.original_name }}</h3><p class="small-note">Uploaded {{ report.created_at }}</p></div><span class="status {{ 'status-confirmed' if report.extraction_status == 'readable' else 'status-neutral' }}">{{ 'Text extracted' if report.extraction_status == 'readable' else 'Unreadable report' }}</span></div>
+    <p>{{ report.explanation }}</p>
+    <a class="text-link" href="{{ url_for('download_report', report_id=report.id) }}">Download original report →</a>
+    {% if findings_by_report[report.id] %}<div class="table-wrap report-findings"><table><thead><tr><th>Test</th><th>Value</th><th>Unit</th><th>Lab reference range</th><th>Comparison</th></tr></thead><tbody>{% for finding in findings_by_report[report.id] %}<tr><td>{{ finding.test_name }}</td><td>{{ finding.result_value }}</td><td>{{ finding.unit or '—' }}</td><td>{{ finding.reference_range or '—' }}</td><td>{{ finding.flag }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+  </article>
+{% endfor %}</div>
+{% else %}<div class="empty-state card"><span class="empty-icon">▤</span><h3>No reports stored</h3><p>Reports you upload will appear here and remain private to your account.</p></div>{% endif %}
+</section>
+{% endblock %}

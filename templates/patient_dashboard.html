@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Patient dashboard | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><span class="eyebrow">YOUR PRIVATE DASHBOARD</span><h1>Good to see you, {{ g.user.name }}</h1><p>Your profile and care information are private to your verified session.</p></div>
+  <form action="{{ url_for('logout') }}" method="post" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="button button-outline" type="submit">Log out securely</button></form>
+</section>
+
+{% if patient_profile %}
+<details class="card profile-editor">
+  <summary>Patient profile and contact details</summary>
+  <p class="small-note">Registration number and mobile access details cannot be changed here. To change a mobile number, use an authorized identity-verification process; this demo does not provide one.</p>
+  <form method="post" class="form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Full name<input name="name" value="{{ profile_form.name }}" maxlength="100" required></label>
+    <label>Area / city<input name="area_city" value="{{ profile_form.area_city }}" maxlength="150" required></label>
+    <label class="field-wide">Contact email (optional)<input type="email" name="contact_email" value="{{ profile_form.contact_email }}" maxlength="254"></label>
+    <div class="field-wide"><button class="button button-primary" type="submit">Save profile</button></div>
+  </form>
+</details>
+<div class="notice-panel notice-compact"><strong>Private registration {{ patient_profile.registration_number }}</strong><p>{{ patient_profile.area_city }} · {{ patient_profile.mobile }} · Category: {{ {'cancer':'Cancer','dialysis':'Dialysis','blood_bank':'Blood Bank'}.get(patient_profile.care_category, 'Information not available') }}. Keep this number private; it is not enough by itself to retrieve your account.</p></div>
+{% endif %}
+
+<div class="dashboard-grid">
+  <article class="card metric-card"><span class="metric-icon">▦</span><p class="muted">Total appointments</p><strong class="metric">{{ dashboard.total_appointments }}</strong><a href="{{ url_for('appointments') }}#my-appointments">View history →</a></article>
+  <article class="card metric-card"><span class="metric-icon">◷</span><p class="muted">Upcoming appointments</p><strong class="metric">{{ dashboard.upcoming_appointments }}</strong><a href="{{ url_for('appointments') }}#my-appointments">View appointments →</a></article>
+  <article class="card metric-card"><span class="metric-icon">✓</span><p class="muted">Completed appointments</p><strong class="metric">{{ dashboard.completed_appointments }}</strong><a href="{{ url_for('appointments') }}#my-appointments">Review visits →</a></article>
+  <article class="card metric-card"><span class="metric-icon">↶</span><p class="muted">Cancelled appointments</p><strong class="metric">{{ dashboard.cancelled_appointments }}</strong><a href="{{ url_for('appointments') }}#my-appointments">Appointment history →</a></article>
+  <article class="card metric-card"><span class="metric-icon">＋</span><p class="muted">Next dialysis session</p><strong class="metric metric-text">{{ dashboard.dialysis.session_at if dashboard.dialysis else 'Not scheduled' }}</strong><a href="{{ url_for('dialysis_care') }}">Manage schedule →</a></article>
+  <article class="card metric-card"><span class="metric-icon">♡</span><p class="muted">Your blood requests</p><strong class="metric">{{ dashboard.blood_requests }}</strong><a href="{{ url_for('blood_connect') }}">Blood Connect →</a></article>
+  <article class="card metric-card"><span class="metric-icon">▤</span><p class="muted">Private medical reports</p><strong class="metric">{{ dashboard.reports }}</strong><a href="{{ url_for('reports') }}">View reports →</a></article>
+</div>
+
+<section class="section-block dashboard-shortcuts">
+  <div class="section-heading"><div><span class="eyebrow">CARE SHORTCUTS</span><h2>What would you like to do?</h2></div></div>
+  <div class="feature-grid">
+    <a class="card feature-card" href="{{ url_for('directory') }}"><span class="feature-icon teal">⌖</span><h3>Smart Hospital Finder</h3><p>Search sourced facility records and their verification details.</p><span class="card-link">Find hospitals →</span></a>
+    <a class="card feature-card" href="{{ url_for('appointments') }}#book-appointment"><span class="feature-icon blue">◷</span><h3>Book an Appointment</h3><p>Request a published slot from a verified provider.</p><span class="card-link">Request a visit →</span></a>
+    <a class="card feature-card" href="{{ url_for('ai_assistant') }}"><span class="feature-icon violet">✦</span><h3>AI Health Assistant</h3><p>Ask for general health information in English, Hindi, or Marathi.</p><span class="card-link">Open assistant →</span></a>
+    <a class="card feature-card" href="{{ url_for('cancer_facilities') }}"><span class="feature-icon coral">＋</span><h3>Cancer Care</h3><p>Browse oncology facilities and manage clinician-confirmed care dates.</p><span class="card-link">Cancer care →</span></a>
+    <a class="card feature-card" href="{{ url_for('dialysis_facilities') }}"><span class="feature-icon blue">＋</span><h3>Dialysis Care</h3><p>Browse kidney-care facilities and manage your prescribed schedule.</p><span class="card-link">Dialysis care →</span></a>
+    <a class="card feature-card" href="{{ url_for('blood_connect') }}"><span class="feature-icon coral">♡</span><h3>Blood Connect</h3><p>Submit a private request or browse sourced blood bank contacts.</p><span class="card-link">Open Blood Connect →</span></a>
+  </div>
+</section>
+
+<section class="card compact-list section-block" id="upcoming-appointments">
+  <h2>Upcoming appointments</h2>
+  {% for appointment in dashboard.appointments %}
+  <div class="list-row">
+    <span><strong>{{ appointment.provider_name }}</strong><small>{{ appointment.specialty|replace('_', ' ')|title }} · {{ appointment.hospital_name }} · {{ appointment.slot_at|replace('T', ' at ') }}</small></span>
+    <span class="appointment-actions"><span class="status status-{{ appointment.status|lower }}">{{ 'Awaiting confirmation' if appointment.status in ['Pending', 'Requested'] else appointment.status }}</span>
+      {% if appointment.appointment_type == 'doctor' %}
+      <form method="post" action="{{ url_for('cancel_appointment', appointment_id=appointment.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="button button-small button-danger" type="submit">Cancel</button></form>
+      {% else %}
+      <form method="post" action="{{ url_for('cancel_provider_appointment', appointment_id=appointment.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="button button-small button-danger" type="submit">Cancel</button></form>
+      {% endif %}
+    </span>
+  </div>
+  {% else %}<div class="empty-state"><p>No upcoming appointments. Requests appear here after you request a published provider slot.</p><a class="button button-outline" href="{{ url_for('appointments') }}#book-appointment">Book an appointment</a></div>{% endfor %}
+</section>
+
+<section class="card compact-list section-block">
+  <h2>Recent appointment history</h2>
+  {% for appointment in dashboard.history %}
+  <div class="list-row"><span><strong>{{ appointment.provider_name }}</strong><small>{{ appointment.specialty|replace('_', ' ')|title }} · {{ appointment.hospital_name }} · {{ appointment.slot_at|replace('T', ' at ') }}</small></span><span class="status status-{{ appointment.status|lower }}">{{ appointment.status }}</span></div>
+  {% else %}<div class="empty-state"><p>Your past visits and cancelled appointments will appear here.</p></div>{% endfor %}
+</section>
+{% endblock %}

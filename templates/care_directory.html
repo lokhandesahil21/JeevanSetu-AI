@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }} | JeevanSetu AI{% endblock %}
+{% block content %}
+<div class="category-page-top"><a class="button button-outline" href="{{ url_for('index') }}">← Back to Home</a><a class="button button-primary" href="{{ url_for('patient_register', category=category) }}">Patient Registration</a></div>
+<section class="page-heading"><div><span class="eyebrow">NAGPUR HEALTHCARE DIRECTORY</span><h1>{{ heading }}</h1><p>Source-attributed local listings. Confirm contacts, services, timing, and availability directly.</p></div></section>
+<div class="notice-panel notice-compact"><strong>Directory data may be incomplete or outdated</strong><p>Unverified and pending imported records are labelled. No diagnosis, treatment advice, or appointment is provided by viewing or registering here.</p></div>
+<form method="get" class="card filter-form">
+  <label>Facility name or service<input name="q" value="{{ filters.q }}" placeholder="Search name or service"></label>
+  <label>Area / locality<input name="area" value="{{ filters.area }}" placeholder="Search locality or address"></label>
+  <button class="button button-primary" type="submit">Search</button><a class="button button-outline" href="{{ request.path }}">Clear</a>
+</form>
+{% if facilities %}<section class="section-block"><div class="result-grid">{% for item in facilities %}
+<article class="card result-card">
+  <div class="result-top"><span class="status {{ 'status-confirmed' if item.verification_status == 'verified' else 'status-neutral' }}">{{ item.verification_status|title }}</span></div>
+  <h2><a href="{{ url_for('facility_detail', facility_id=item.id) }}">{{ item.name }}</a></h2><p>{{ item.address or 'Information not available' }}{% if item.area %}, {{ item.area }}{% endif %}{% if item.city %}, {{ item.city }}{% endif %}</p>
+  <dl class="detail-list">
+    <div><dt>Phone</dt><dd>{% if item.phone and callable_phones[item.id] %}<a href="tel:{{ item.phone|replace(' ','')|replace('(','')|replace(')','')|replace(';','')|replace('/','') }}">{{ item.phone }}</a>{% elif item.phone %}{{ item.phone }}{% else %}Information not available{% endif %}</dd></div>
+    <div><dt>{{ 'Dialysis services' if category == 'dialysis' else 'Cancer / oncology services' }}</dt><dd>{{ item.services or item.specialty or 'Information not available' }}</dd></div>
+    <div><dt>Source last checked</dt><dd>{{ item.last_checked or 'Information not available' }}</dd></div>
+    <div><dt>Last verified</dt><dd>{{ item.last_verified or 'Information not available' }}</dd></div>
+    <div><dt>Source notes / scheme information</dt><dd>{{ item.notes or 'Information not available' }}</dd></div>
+  </dl>
+  {% if item.source_verification_status %}<p class="small-note">Source verification wording: {{ item.source_verification_status }}</p>{% endif %}
+  <p class="small-note">Source: {% if item.source_url %}<a href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ item.source_url }}</a>{% else %}Information not available{% endif %}</p>
+</article>{% endfor %}</div></section>
+{% else %}<div class="empty-state card section-block"><h3>No sourced facilities match</h3><p>No matching service data is available in the imported directory yet. Submit an authorized export for review.</p></div>{% endif %}
+<section class="section-block scheme-information">
+  <h2>Government health scheme information</h2>
+  <p>For general information, eligibility and current participating-facility details, consult the official scheme sources. This directory does not confirm an individual's eligibility or a facility's empanelment.</p>
+  <ul class="source-list">
+    <li><a href="https://pmjay.gov.in/" target="_blank" rel="noopener noreferrer">Ayushman Bharat PM-JAY official website ↗</a></li>
+    <li><a href="https://www.jeevandayee.gov.in/" target="_blank" rel="noopener noreferrer">Maharashtra MJPJAY official website ↗</a></li>
+  </ul>
+</section>
+{% endblock %}

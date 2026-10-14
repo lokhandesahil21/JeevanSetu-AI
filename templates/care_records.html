@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Care schedule overview | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">PRIVATE CARE SCHEDULES</span><h1>Cancer and dialysis follow-ups</h1><p>Schedules shown here were entered into your account with consent. This is not diagnosis or treatment advice.</p></div></section>
+<div class="two-column">
+  <section class="card form-card"><h2>Cancer-care dates</h2><p class="form-hint">Cancer stage is not collected by this overview and should only be recorded when entered or verified by a qualified clinician.</p>
+    {% if cancer_records %}{% for item in cancer_records %}<div class="list-row"><span><strong>Treatment date:</strong> {{ item.treatment_date }}<small>Follow-up: {{ item.follow_up_date or 'Not entered' }}{% if item.clinician_name %} · Clinician: {{ item.clinician_name }}{% endif %}</small></span></div>{% endfor %}
+    {% else %}<p>No cancer-care dates are stored.</p>{% endif %}
+    <a class="button button-outline" href="{{ url_for('cancer_care') }}">Manage cancer-care information</a>
+  </section>
+  <section class="card form-card"><h2>Dialysis schedule</h2>
+    {% if dialysis_records %}{% for item in dialysis_records %}<div class="list-row"><span><strong>{{ item.session_at }}</strong><small>Status: {{ item.status }}</small></span></div>{% endfor %}
+    {% else %}<p>No dialysis sessions are stored.</p>{% endif %}
+    <a class="button button-outline" href="{{ url_for('dialysis_care') }}">Manage dialysis schedule</a>
+  </section>
+</div>
+{% endblock %}

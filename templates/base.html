@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#087f78">
+  <meta name="description" content="JeevanSetu AI connects patients with sourced healthcare information and care coordination tools in Nagpur.">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>{% block title %}JeevanSetu AI{% endblock %}</title>
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+  <link rel="icon" href="{{ url_for('static', filename='icons/jeevansetu.svg') }}" type="image/svg+xml">
+  <link rel="icon" href="{{ url_for('static', filename='icons/jeevansetu-192.png') }}" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="app-frame">
+    <aside id="app-sidebar" class="app-sidebar" aria-label="App navigation">
+      <a class="brand" href="{{ url_for('index') }}" aria-label="JeevanSetu AI home">
+        <span class="brand-mark" aria-hidden="true">✚</span>
+        <span>JeevanSetu <strong>AI</strong><small>Care, connected.</small></span>
+      </a>
+      <div class="sidebar-label">WORKSPACE</div>
+      <nav class="sidebar-nav" aria-label="Primary navigation">
+        <a class="sidebar-link {% if request.path == url_for('index') %}is-active{% endif %}" href="{{ url_for('index') }}"><span aria-hidden="true">⌂</span>Home</a>
+        <a class="sidebar-link {% if request.path in [url_for('directory'), url_for('hospitals'), url_for('doctors')] or request.path.startswith('/facilities/') %}is-active{% endif %}" href="{{ url_for('directory') }}"><span aria-hidden="true">⌖</span>Discover care</a>
+        <a class="sidebar-link {% if request.path.startswith('/appointments') or request.path.startswith('/doctor/appointments') %}is-active{% endif %}" href="{% if g.user and g.user.role == 'doctor' %}{{ url_for('doctor_appointments') }}{% elif g.user and g.user.role == 'patient' %}{{ url_for('appointments') }}{% elif g.user and g.user.role == 'admin' %}{{ url_for('admin') }}{% elif g.user and g.user.role == 'hospital' %}{{ url_for('provider_listing') }}{% else %}{{ url_for('appointments') }}{% endif %}"><span aria-hidden="true">◷</span>Bookings</a>
+        <a class="sidebar-link {% if request.path.startswith('/blood') %}is-active{% endif %}" href="{{ url_for('blood_connect') }}"><span aria-hidden="true">♡</span>Blood Connect</a>
+        {% if g.user and g.user.role == 'patient' %}
+        <a class="sidebar-link {% if request.path.startswith('/patient/dashboard') %}is-active{% endif %}" href="{{ url_for('patient_dashboard') }}"><span aria-hidden="true">◉</span>My profile</a>
+        <a class="sidebar-link" href="{{ url_for('patient_registration_confirmation') }}"><span aria-hidden="true">#</span>Registration details</a>
+        <a class="sidebar-link" href="{{ url_for('appointments') }}#book-appointment"><span aria-hidden="true">＋</span>Request appointment</a>
+        <a class="sidebar-link" href="{{ url_for('cancer_care') }}"><span aria-hidden="true">✚</span>Cancer care plan</a>
+        <a class="sidebar-link" href="{{ url_for('dialysis_care') }}"><span aria-hidden="true">◈</span>Dialysis schedule</a>
+        {% elif not g.user %}
+        <a class="sidebar-link" href="{{ url_for('patient_register') }}"><span aria-hidden="true">◉</span>Patient registration</a>
+        <a class="sidebar-link" href="{{ url_for('patient_access') }}"><span aria-hidden="true">↗</span>Patient access</a>
+        <a class="sidebar-link" href="{{ url_for('appointments') }}"><span aria-hidden="true">＋</span>Request appointment</a>
+        <a class="sidebar-link" href="{{ url_for('cancer_care') }}"><span aria-hidden="true">✚</span>Cancer care plan</a>
+        <a class="sidebar-link" href="{{ url_for('dialysis_care') }}"><span aria-hidden="true">◈</span>Dialysis schedule</a>
+        {% elif g.user and g.user.role == 'admin' %}
+        <a class="sidebar-link {% if request.path == url_for('admin') %}is-active{% endif %}" href="{{ url_for('admin') }}"><span aria-hidden="true">▦</span>Admin dashboard</a>
+        {% elif g.user and g.user.role == 'doctor' %}
+        <a class="sidebar-link" href="{{ url_for('doctor_appointments') }}"><span aria-hidden="true">◉</span>My schedule</a>
+        {% elif g.user and g.user.role == 'hospital' %}
+        <a class="sidebar-link {% if request.path.startswith('/provider/') %}is-active{% endif %}" href="{{ url_for('provider_listing') }}"><span aria-hidden="true">◉</span>Provider profile</a>
+        {% else %}
+        <a class="sidebar-link {% if request.path.startswith('/patient/register') %}is-active{% endif %}" href="{{ url_for('patient_register') }}"><span aria-hidden="true">◉</span>Patient profile</a>
+        {% endif %}
+      </nav>
+
+      <div class="sidebar-label sidebar-label-spaced">HEALTH SERVICES</div>
+      <nav class="sidebar-nav" aria-label="Health services">
+        <a class="sidebar-link {% if request.path.startswith('/ai-assistant') %}is-active{% endif %}" href="{{ url_for('ai_assistant') }}"><span aria-hidden="true">✦</span>AI Health Assistant</a>
+        <a class="sidebar-link {% if request.path.startswith('/reports') %}is-active{% endif %}" href="{% if g.user and g.user.role == 'patient' %}{{ url_for('reports') }}{% else %}{{ url_for('patient_access') }}{% endif %}"><span aria-hidden="true">▤</span>Medical reports</a>
+        <a class="sidebar-link {% if request.path.startswith('/ayushman-bharat') %}is-active{% endif %}" href="{{ url_for('ayushman_bharat') }}"><span aria-hidden="true">◇</span>Ayushman Bharat</a>
+        <a class="sidebar-link {% if request.path.startswith('/cancer') %}is-active{% endif %}" href="{{ url_for('cancer_facilities') }}"><span aria-hidden="true">＋</span>Cancer care</a>
+        <a class="sidebar-link {% if request.path.startswith('/dialysis') %}is-active{% endif %}" href="{{ url_for('dialysis_facilities') }}"><span aria-hidden="true">◈</span>Kidney & dialysis</a>
+        {% if g.user and g.user.role == 'patient' %}<a class="sidebar-link {% if request.path.startswith('/care-records') %}is-active{% endif %}" href="{{ url_for('care_records') }}"><span aria-hidden="true">✓</span>Care timeline</a>{% endif %}
+      </nav>
+
+      {% if g.user and g.user.role == 'admin' %}
+      <div class="sidebar-label sidebar-label-spaced">ADMINISTRATION</div>
+      <nav class="sidebar-nav" aria-label="Administration">
+        <a class="sidebar-link {% if request.path.startswith('/admin/import') %}is-active{% endif %}" href="{{ url_for('admin_import') }}"><span aria-hidden="true">⇧</span>Directory imports</a>
+      </nav>
+      {% endif %}
+
+      {% if g.user %}
+      <div class="sidebar-account">
+        <span class="profile-avatar">{{ g.user.name[0]|upper }}</span>
+        <span class="sidebar-account-copy"><strong>{{ g.user.name }}</strong><small>{{ g.user.role|title }} account</small></span>
+        <form action="{{ url_for('logout') }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button class="sidebar-logout" type="submit" aria-label="Log out securely" title="Log out">↗</button>
+        </form>
+      </div>
+      {% endif %}
+      <div class="sidebar-bottom">
+        <span class="privacy-dot" aria-hidden="true"></span>
+        <span><strong>Privacy first</strong><small>Your private records stay protected by sign-in.</small></span>
+      </div>
+    </aside>
+
+    <div class="app-main">
+      <header class="app-topbar">
+        <div class="topbar-leading">
+          <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="app-sidebar" aria-label="Open navigation"><span aria-hidden="true">☰</span></button>
+          <a class="mobile-brand" href="{{ url_for('index') }}"><span class="brand-mark" aria-hidden="true">✚</span><span>JeevanSetu <strong>AI</strong></span></a>
+          <form class="topbar-search" action="{{ url_for('directory') }}" method="get" role="search">
+            <label class="visually-hidden" for="topbar-query">Search healthcare directory</label>
+            <span aria-hidden="true">⌕</span><input id="topbar-query" name="q" maxlength="150" placeholder="Search hospitals or services">
+          </form>
+        </div>
+        <div class="topbar-actions">
+          <label class="visually-hidden" for="assistant-language">Assistant language</label>
+          <select id="assistant-language" class="language-select" aria-label="Assistant language">
+            <option value="en">EN · English</option><option value="hi">हिन्दी</option><option value="mr">मराठी</option>
+          </select>
+          <a class="topbar-icon-link" href="{% if g.user and g.user.role == 'patient' %}{{ url_for('appointments') }}#my-appointments{% elif g.user and g.user.role == 'doctor' %}{{ url_for('doctor_appointments') }}{% elif g.user and g.user.role == 'admin' %}{{ url_for('admin') }}{% elif g.user and g.user.role == 'hospital' %}{{ url_for('provider_listing') }}{% else %}{{ url_for('directory') }}{% endif %}" aria-label="{% if g.user and g.user.role == 'patient' %}View your appointments{% elif g.user and g.user.role == 'doctor' %}View your schedule{% elif g.user and g.user.role == 'admin' %}View admin dashboard{% elif g.user and g.user.role == 'hospital' %}View provider listing{% else %}View healthcare directory{% endif %}" title="Care updates"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          {% if g.user %}
+            {% if g.user.role == 'patient' %}<a class="profile-chip" href="{{ url_for('patient_dashboard') }}" aria-label="Open your profile"><span class="profile-avatar">{{ g.user.name[0]|upper }}</span><span class="profile-name">{{ g.user.name.split()[0] }}</span></a>
+            {% elif g.user.role == 'admin' %}<a class="profile-chip" href="{{ url_for('admin') }}" aria-label="Open admin dashboard"><span class="profile-avatar">{{ g.user.name[0]|upper }}</span><span class="profile-name">{{ g.user.name.split()[0] }}</span></a>
+            {% elif g.user.role == 'doctor' %}<a class="profile-chip" href="{{ url_for('doctor_appointments') }}" aria-label="Open doctor schedule"><span class="profile-avatar">{{ g.user.name[0]|upper }}</span><span class="profile-name">{{ g.user.name.split()[0] }}</span></a>
+            {% else %}<a class="profile-chip" href="{{ url_for('provider_listing') }}" aria-label="Open provider profile"><span class="profile-avatar">{{ g.user.name[0]|upper }}</span><span class="profile-name">{{ g.user.name.split()[0] }}</span></a>{% endif %}
+          {% else %}<a class="profile-chip" href="{{ url_for('patient_access') }}"><span class="profile-avatar" aria-hidden="true">♙</span><span class="profile-name">Sign in</span></a>{% endif %}
+          <button class="install-app-button" type="button" data-pwa-install hidden>Install app</button>
+        </div>
+      </header>
+
+      <main id="main" class="page-shell">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack" aria-live="polite">
+              {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+      </main>
+      <footer class="site-footer">
+        <div class="footer-inner">
+          <div><a class="footer-brand" href="{{ url_for('index') }}">JeevanSetu AI</a><p>A student-built healthcare coordination demo.</p></div>
+          <p class="footer-note">Not for emergency use. Directory records are source-labelled and may be unverified; there is no live hospital, appointment, SMS, or blood-stock integration. Confirm services directly with providers. For emergencies, contact local emergency services or go to the nearest emergency department.</p>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+    <a class="{% if request.path == url_for('index') %}is-active{% endif %}" href="{{ url_for('index') }}"><span aria-hidden="true">⌂</span><small>Home</small></a>
+    <a class="{% if request.path.startswith('/directory') or request.path == url_for('hospitals') or request.path.startswith('/facilities/') or request.path in [url_for('doctors'), url_for('cancer_facilities'), url_for('dialysis_facilities'), url_for('blood_banks_directory')] %}is-active{% endif %}" href="{{ url_for('directory') }}"><span aria-hidden="true">⌖</span><small>Discover</small></a>
+    <a class="{% if request.path.startswith('/appointments') or request.path.startswith('/doctor/appointments') %}is-active{% endif %}" href="{% if g.user and g.user.role == 'patient' %}{{ url_for('appointments') }}{% elif g.user and g.user.role == 'doctor' %}{{ url_for('doctor_appointments') }}{% elif g.user and g.user.role == 'admin' %}{{ url_for('admin') }}{% elif g.user and g.user.role == 'hospital' %}{{ url_for('provider_listing') }}{% else %}{{ url_for('appointments') }}{% endif %}"><span aria-hidden="true">◷</span><small>Bookings</small></a>
+    <a class="{% if request.path.startswith('/blood') %}is-active{% endif %}" href="{{ url_for('blood_connect') }}"><span aria-hidden="true">♡</span><small>Blood</small></a>
+    <a class="{% if request.path.startswith('/patient/dashboard') or request.path.startswith('/admin') or request.path.startswith('/provider/') %}is-active{% endif %}" href="{% if g.user and g.user.role == 'patient' %}{{ url_for('patient_dashboard') }}{% elif g.user and g.user.role == 'admin' %}{{ url_for('admin') }}{% elif g.user and g.user.role == 'hospital' %}{{ url_for('provider_listing') }}{% elif g.user and g.user.role == 'doctor' %}{{ url_for('doctor_appointments') }}{% else %}{{ url_for('patient_register') }}{% endif %}"><span aria-hidden="true">◉</span><small>Profile</small></a>
+  </nav>
+
+  <button class="ai-chat-launcher" type="button" aria-expanded="false" aria-controls="ai-chat-panel">
+    <span aria-hidden="true">✦</span><span>JeevanSetu AI</span>
+  </button>
+  <section id="ai-chat-panel" class="ai-chat-panel" aria-label="JeevanSetu AI chat" hidden>
+    <div class="ai-chat-panel-heading">
+      <div><span class="eyebrow">HEALTH INFORMATION</span><h2>JeevanSetu AI</h2></div>
+      <button class="ai-chat-close" type="button" aria-label="Close assistant">×</button>
+    </div>
+    <p class="ai-chat-privacy">Messages are sent to OpenAI for a response. Do not include identifying or highly sensitive information. This assistant does not diagnose or replace your clinician.</p>
+    <div class="ai-chat-messages" aria-live="polite" aria-relevant="additions text">
+      <p class="ai-chat-bubble ai-chat-assistant">Choose a topic and ask a general health question. Hospital answers use the existing directory and show source status.</p>
+      <p class="ai-chat-status" role="status"></p>
+    </div>
+    {% set assistant_form_id = 'floating-ai-chat' %}
+    {% set assistant_compact = true %}
+    {% include 'ai_chat_form.html' %}
+    <a class="ai-chat-full-link" href="{{ url_for('ai_assistant') }}">Open full assistant page</a>
+  </section>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Video Consultation Information | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">VIDEO CONSULTATION</span><h1>Consultation connection</h1><p>Appointment with {{ appointment.doctor_name }} · {{ appointment.slot_at|replace('T', ' at ') }}</p></div></section>
+<section class="card consultation-panel">
+  <span class="feature-icon blue">◉</span>
+  {% if meeting_url %}
+    <h2>Configured meeting link</h2><p>A meeting URL was configured for this local demo. Verify it with your care provider before joining.</p><a class="button button-primary" href="{{ meeting_url }}" target="_blank" rel="noopener noreferrer">Open meeting link ↗</a>
+  {% else %}
+    <h2>Video call is not connected</h2><p>This is an informational placeholder. No video service is integrated, and no call is taking place.</p><span class="status status-neutral">Placeholder only</span>
+  {% endif %}
+  <div class="notice-panel notice-compact"><strong>Emergency reminder</strong><p>Never wait for a video consultation during an emergency. Contact local emergency services or go to the nearest emergency department.</p></div>
+  <a class="text-link" href="{{ url_for('appointments') }}">← Back to appointments</a>
+</section>
+{% endblock %}

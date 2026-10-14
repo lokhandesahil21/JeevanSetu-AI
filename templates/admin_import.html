@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Import healthcare directory | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">ADMINISTRATION</span><h1>Import Nagpur healthcare data</h1><p>Upload an authorized Excel workbook, or another structured export. No website scraping is performed.</p></div><a class="button button-outline" href="{{ url_for('directory_template') }}">Download current workbook/template</a></section>
+<section class="card form-card">
+  <div class="notice-panel notice-compact"><strong>Excel import requirements</strong><p>The workbook must contain Facility Directory, Data Analysis, and Add New Records Template sheets. The Facility Directory header and data rows are validated; instruction rows and worksheet summaries are not treated as facilities. Workbook verification wording is preserved and not upgraded to officially verified by the import.</p></div>
+  <form method="post" enctype="multipart/form-data" class="stack-form section-block">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Excel, CSV, or JSON export<input type="file" name="import_file" accept=".xlsx,.csv,.json,application/json,text/csv" required></label>
+    <button class="button button-primary" type="submit">Preview import</button>
+  </form>
+  <p class="small-note">CSV/JSON need name, category, city, source_url; optional fields include address, area, phone, services, coordinates, opening_hours, last_checked, notes, and verification_status. Blank fields never erase existing values.</p>
+</section>
+{% if preview %}
+<section class="section-block card form-card">
+  <span class="eyebrow">PREVIEW — NO DATABASE CHANGES YET</span><h2>{{ preview.filename }}</h2>
+  <div class="stats-strip"><span><strong>{{ preview.records_read }}</strong> facility data rows read</span><span><strong>{{ preview.new }}</strong> new</span><span><strong>{{ preview.updated }}</strong> changed</span><span><strong>{{ preview.unchanged }}</strong> unchanged</span><span><strong>{{ preview.skipped }}</strong> skipped</span><span><strong>{{ preview.flagged }}</strong> possible duplicates</span></div>
+  {% if preview.errors %}<h3>Rows needing attention</h3><ul>{% for error in preview.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+  {% if preview.analysis %}<h3>Workbook Data Analysis (informational)</h3><div class="table-wrap"><table><thead><tr><th>Metric</th><th>Value</th><th>Interpretation</th></tr></thead><tbody>{% for item in preview.analysis %}<tr><td>{{ item.metric }}</td><td>{{ item.value }}</td><td>{{ item.interpretation }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+  {% if preview.template_headers %}<details class="section-block"><summary>Future submission template columns</summary><p>{{ preview.template_headers|join(', ') }}</p></details>{% endif %}
+  <form method="post" class="inline-form section-block"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="commit"><input type="hidden" name="preview_token" value="{{ session.get('directory_import_preview', '') }}"><button class="button button-primary" type="submit">Commit import transaction</button></form>
+</section>
+{% endif %}
+{% if logs %}
+<section class="section-block"><div class="section-heading"><h2>Recent import history</h2></div><div class="card table-wrap"><table><thead><tr><th>Imported at</th><th>File</th><th>Result</th><th>Read</th><th>New</th><th>Updated</th><th>Unchanged</th><th>Skipped</th><th>Flagged</th><th>Errors</th></tr></thead><tbody>{% for item in logs %}<tr><td>{{ item.imported_at }}</td><td>{{ item.filename }}</td><td>{{ item.status }}</td><td>{{ item.records_read }}</td><td>{{ item.inserted }}</td><td>{{ item.updated }}</td><td>{{ item.unchanged }}</td><td>{{ item.skipped }}</td><td>{{ item.flagged }}</td><td>{{ item.errors[:180] }}</td></tr>{% endfor %}</tbody></table></div></section>
+{% endif %}
+{% endblock %}

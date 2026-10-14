@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Admin review | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">ADMINISTRATION</span><h1>Directory verification</h1><p>Review provider submissions and imports before publishing them.</p></div><a class="button button-primary" href="{{ url_for('admin_import') }}">Import CSV / JSON</a></section>
+{% if directory_listings %}
+<section class="section-block"><div class="section-heading"><h2>Pending sourced directory records</h2></div>
+<div class="result-grid">{% for item in directory_listings %}
+<article class="card result-card"><span class="status status-pending">Pending review</span><h2>{{ item.name }}</h2><p>{{ item.category|replace('_',' ')|title }} · {{ item.address or 'Address not supplied' }}{% if item.area %}, {{ item.area }}{% endif %}, {{ item.city }}</p><p><strong>Specialty:</strong> {{ item.specialty or 'Not supplied' }}</p><p><strong>Contact:</strong> {{ item.phone or 'Not supplied' }}</p><p><strong>Source:</strong> <a href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ item.source_url }}</a></p>
+<form method="post" action="{{ url_for('verify_directory_listing', listing_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="button button-primary" type="submit">Verify and publish</button></form></article>
+{% endfor %}</div></section>
+{% endif %}
+<section class="section-block"><div class="section-heading"><h2>Legacy hospital submissions</h2></div>
+{% if hospitals %}
+<div class="result-grid">{% for hospital in hospitals %}
+<article class="card result-card"><span class="status status-pending">Pending review</span><h2>{{ hospital.name }}</h2><p>{{ hospital.address }}, {{ hospital.area }}, {{ hospital.city }}</p><p><strong>Specialties:</strong> {{ hospital.specialties }}</p><p><strong>Contact:</strong> {{ hospital.phone or 'Not provided' }}</p>
+<form method="post" action="{{ url_for('verify_hospital', hospital_id=hospital.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="button button-primary" type="submit">Verify and publish</button></form></article>
+{% endfor %}</div>
+{% else %}<div class="empty-state card"><h2>No legacy pending listings</h2><p>New community submissions will appear here for administrator review.</p></div>{% endif %}
+</section>
+{% endblock %}

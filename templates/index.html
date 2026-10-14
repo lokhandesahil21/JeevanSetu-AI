@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}JeevanSetu AI | Care, connected{% endblock %}
+{% block content %}
+<section class="home-welcome">
+  <div class="welcome-copy">
+    <span class="eyebrow">YOUR HEALTHCARE COMPANION · NAGPUR</span>
+    <h1 id="landing-title">{% if g.user %}Welcome back, {{ g.user.name.split()[0] }}{% else %}Care, connected.{% endif %}</h1>
+    <p>Find trusted care information, manage appointments and stay connected to the services that matter.</p>
+  </div>
+  <div class="welcome-mark" aria-hidden="true">
+    <span class="welcome-orbit orbit-a"></span><span class="welcome-orbit orbit-b"></span>
+    <span class="welcome-cross">✚</span>
+  </div>
+</section>
+
+<form class="home-search" action="{{ url_for('directory') }}" method="get" role="search">
+  <span class="search-symbol" aria-hidden="true">⌕</span>
+  <label class="visually-hidden" for="home-search-query">Search hospitals, services, or area</label>
+  <input id="home-search-query" type="search" name="q" maxlength="150" placeholder="Search hospitals, care services, or an area">
+  <input type="hidden" name="city" value="Nagpur">
+  <button class="button button-primary" type="submit">Search care</button>
+</form>
+
+<div class="home-emergency" role="note">
+  <span class="emergency-symbol" aria-hidden="true">!</span>
+  <div><strong>Need urgent medical help?</strong><p>This website is not an emergency service. Call India's emergency number or go to the nearest emergency department.</p></div>
+  <a class="button button-danger" href="tel:112">Call 112</a>
+</div>
+
+<section class="home-section" aria-labelledby="services-title">
+  <div class="section-heading">
+    <div><span class="eyebrow">CARE, ALL IN ONE PLACE</span><h2 id="services-title">Explore services</h2></div>
+    <a class="section-more" href="{{ url_for('directory') }}">Browse directory <span aria-hidden="true">→</span></a>
+  </div>
+  <div class="service-grid">
+    <a class="service-tile service-tile-teal" href="{{ url_for('directory') }}"><span class="service-icon" aria-hidden="true">⌖</span><strong>Find hospitals</strong><small>Search sourced facility records</small></a>
+    <a class="service-tile service-tile-blue" href="{{ url_for('doctors') }}"><span class="service-icon" aria-hidden="true">＋</span><strong>Find doctors</strong><small>Verified profiles and published slots</small></a>
+    <a class="service-tile service-tile-violet" href="{{ url_for('ai_assistant') }}"><span class="service-icon" aria-hidden="true">✦</span><strong>AI health assistant</strong><small>General information in 3 languages</small></a>
+    <a class="service-tile service-tile-coral" href="{{ url_for('blood_connect') }}"><span class="service-icon" aria-hidden="true">♡</span><strong>Blood Connect</strong><small>Private requests and blood bank contacts</small></a>
+    <a class="service-tile service-tile-amber" href="{{ url_for('ayushman_bharat') }}"><span class="service-icon" aria-hidden="true">◇</span><strong>Ayushman Bharat</strong><small>Official eligibility resources</small></a>
+    {% if g.user and g.user.role == 'patient' %}
+    <a class="service-tile service-tile-mint" href="{{ url_for('reports') }}"><span class="service-icon" aria-hidden="true">▤</span><strong>Medical reports</strong><small>Private uploads and explanations</small></a>
+    {% else %}
+    <a class="service-tile service-tile-mint" href="{{ url_for('patient_register') }}"><span class="service-icon" aria-hidden="true">▤</span><strong>Patient registration</strong><small>Create a private care dashboard</small></a>
+    {% endif %}
+  </div>
+</section>
+
+<div class="home-content-grid">
+  <section class="home-panel" aria-labelledby="upcoming-title">
+    <div class="section-heading">
+      <div><span class="eyebrow">YOUR CARE</span><h2 id="upcoming-title">{% if g.user and g.user.role == 'patient' %}Upcoming appointments{% else %}Appointments{% endif %}</h2></div>
+      {% if g.user and g.user.role == 'patient' %}<a class="section-more" href="{{ url_for('appointments') }}#my-appointments">View all <span aria-hidden="true">→</span></a>{% endif %}
+    </div>
+    {% if g.user and g.user.role == 'patient' %}
+      {% for appointment in upcoming_appointments %}
+      <article class="home-appointment">
+        <span class="appointment-date-icon" aria-hidden="true">◷</span>
+        <div class="home-list-copy"><strong>{{ appointment.provider_name }}</strong><small>{{ appointment.hospital_name }} · {{ appointment.slot_at|replace('T', ' at ') }}</small></div>
+        <span class="status status-{{ appointment.status|lower }}">{{ 'Awaiting confirmation' if appointment.status in ['Pending', 'Requested'] else appointment.status }}</span>
+      </article>
+      {% else %}
+      <div class="home-empty"><span class="empty-icon" aria-hidden="true">◷</span><strong>No upcoming appointments</strong><p>Requests only appear after you choose a slot published by a verified provider.</p><a class="button button-outline" href="{{ url_for('appointments') }}#book-appointment">Explore appointments</a></div>
+      {% endfor %}
+    {% elif g.user %}
+      <div class="home-empty"><span class="empty-icon" aria-hidden="true">◷</span><strong>Manage your care workspace</strong><p>Use your role-specific schedule and administration tools.</p>
+        {% if g.user.role == 'doctor' %}<a class="button button-outline" href="{{ url_for('doctor_appointments') }}">Open doctor schedule</a>
+        {% elif g.user.role == 'admin' %}<a class="button button-outline" href="{{ url_for('admin') }}">Open admin dashboard</a>
+        {% elif g.user.role == 'hospital' %}<a class="button button-outline" href="{{ url_for('provider_listing') }}">Open provider listing</a>{% endif %}
+      </div>
+    {% else %}
+      <div class="home-empty"><span class="empty-icon" aria-hidden="true">◷</span><strong>Keep your care in one place</strong><p>Register to request appointments and manage your private care dashboard.</p><a class="button button-outline" href="{{ url_for('patient_register') }}">Create patient profile</a></div>
+    {% endif %}
+  </section>
+
+  <section class="home-panel nearby-panel" aria-labelledby="nearby-title">
+    <div class="section-heading">
+      <div><span class="eyebrow">NAGPUR DIRECTORY</span><h2 id="nearby-title">Nearby care</h2></div>
+      <a class="section-more" href="{{ url_for('directory', city='Nagpur') }}">See directory <span aria-hidden="true">→</span></a>
+    </div>
+    {% for facility in facilities %}
+    <article class="nearby-item">
+      <span class="nearby-icon" aria-hidden="true">{% if facility.category == 'blood_bank' %}♡{% elif facility.category == 'cancer' %}＋{% elif facility.category == 'dialysis' %}◈{% else %}✚{% endif %}</span>
+      <div class="home-list-copy">
+        <a href="{{ url_for('facility_detail', facility_id=facility.id) }}"><strong>{{ facility.name }}</strong></a>
+        <small>{{ facility.area or facility.city }} · {{ facility.category|replace('_', ' ')|title }}</small>
+      </div>
+      <span class="verification-badge verification-{{ facility.verification_status }}">{{ facility.verification_status|title }}</span>
+    </article>
+    {% else %}
+    <div class="home-empty"><strong>No directory records to show yet</strong><p>Search the directory or check back after an administrator imports a sourced listing.</p><a class="button button-outline" href="{{ url_for('directory') }}">Open directory</a></div>
+    {% endfor %}
+    <p class="small-note home-source-note">Directory information can be incomplete or unverified. Confirm services, hours, and participation directly with each facility.</p>
+  </section>
+</div>
+
+<section class="health-update-strip" aria-label="Health information">
+  <span class="update-icon" aria-hidden="true">i</span>
+  <div><strong>Health information, with care</strong><p>AI explanations are informational and require qualified clinical review. Scheme eligibility and benefits must be confirmed through official channels.</p></div>
+  <a href="{{ url_for('ayushman_bharat') }}">Official scheme resources <span aria-hidden="true">→</span></a>
+</section>
+{% endblock %}

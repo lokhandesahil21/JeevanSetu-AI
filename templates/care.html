@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Cancer Care' if mode == 'cancer' else 'Dialysis Care' }} | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">PERSONAL CARE TOOLS</span><h1>{{ 'Cancer care' if mode == 'cancer' else 'Dialysis care' }}</h1><p>{{ 'Save clinician-confirmed information, treatment dates, and follow-ups.' if mode == 'cancer' else 'Track the dialysis schedule prescribed by your treating clinician.' }}</p></div></section>
+{% if mode == 'cancer' %}
+<div class="notice-panel notice-compact"><strong>Clinician-led information only</strong><p>JeevanSetu AI does not diagnose cancer or determine cancer stage. Enter only information confirmed by your authorized clinician.</p></div>
+<section class="card form-card section-block"><div class="section-heading"><div><span class="eyebrow">PRIVATE CARE RECORD</span><h2>Add treatment or follow-up</h2></div></div>
+<form method="post" class="form-grid">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <label class="field-wide">Clinician-confirmed information<textarea name="clinician_confirmed_info" rows="3" maxlength="500" required placeholder="Only information confirmed by your clinician; do not enter a stage unless clinician-confirmed."></textarea></label>
+  <label>Treatment or visit<input name="treatment_name" maxlength="500" placeholder="Optional"></label>
+  <label>Clinician name<input name="clinician_name" maxlength="500" placeholder="Optional"></label>
+  <label>Treatment date<input type="date" name="treatment_date" required></label>
+  <label>Follow-up date<input type="date" name="follow_up_date"></label>
+  <label class="checkbox-label field-wide"><input type="checkbox" name="care_consent" value="yes" required><span>I consent to storing this clinician-confirmed care information in my private account.</span></label>
+  <div class="field-wide"><button class="button button-primary" type="submit">Save care entry</button></div>
+</form></section>
+<section class="section-block"><div class="section-heading"><div><span class="eyebrow">YOUR TIMELINE</span><h2>Treatment and follow-ups</h2></div></div>
+{% if records %}<div class="timeline">{% for record in records %}<article class="card timeline-entry"><span class="timeline-dot"></span><span class="status status-neutral">{{ record.treatment_date }}</span><h3>{{ record.treatment_name or 'Care update' }}</h3><p>{{ record.clinician_confirmed_info }}</p>{% if record.clinician_name %}<small>Clinician: {{ record.clinician_name }}</small>{% endif %}{% if record.follow_up_date %}<p class="follow-up">Follow-up reminder: <strong>{{ record.follow_up_date }}</strong></p>{% endif %}</article>{% endfor %}</div>
+{% else %}<div class="empty-state card"><h3>Your timeline is ready</h3><p>Care entries are visible only to you after you save them.</p></div>{% endif %}</section>
+<section class="section-block">
+  <div class="section-heading"><div><span class="eyebrow">NAGPUR DIRECTORY</span><h2>{{ 'Cancer hospitals and oncology centres' if mode == 'cancer' else 'Dialysis and kidney treatment facilities' }}</h2></div></div>
+  {% if facilities %}<div class="result-grid">{% for item in facilities %}
+  <article class="card result-card"><span class="status {{ 'status-confirmed' if item.verification_status == 'verified' else 'status-neutral' }}">{{ item.verification_status|title }}</span><h3><a href="{{ url_for('facility_detail', facility_id=item.id) }}">{{ item.name }}</a></h3><p>{{ item.address or 'Address not supplied' }}, {{ item.city }}</p><p>{{ item.services or 'Services not supplied' }}</p><p class="small-note">Last checked: {{ item.last_checked or 'Not supplied' }} · <a href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">Source ↗</a></p></article>
+  {% endfor %}</div>{% else %}<p>No sourced facilities currently match this category.</p>{% endif %}
+</section>
+{% else %}
+<div class="notice-panel notice-compact"><strong>Follow your care team's plan</strong><p>This tracker does not recommend or change dialysis frequency or treatment. Contact your treating clinician with schedule questions.</p></div>
+<section class="card form-card section-block"><div class="section-heading"><div><span class="eyebrow">PRESCRIBED SCHEDULE</span><h2>Add a dialysis session</h2></div></div>
+<form method="post" class="form-grid">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <label>Session date<input type="date" name="session_at" required></label>
+  <label>Tracking status<select name="status"><option>Upcoming</option><option>Completed</option><option>Missed</option></select></label>
+  <label>Treating clinician<input name="clinician_name" maxlength="100"></label>
+  <label>Private note<input name="notes" maxlength="500" placeholder="Optional"></label>
+  <label class="checkbox-label field-wide"><input type="checkbox" name="care_consent" value="yes" required><span>I consent to storing this clinician-prescribed schedule in my private account.</span></label>
+  <div class="field-wide"><button class="button button-primary" type="submit">Add schedule entry</button></div>
+</form></section>
+<section class="section-block"><div class="section-heading"><div><span class="eyebrow">SESSION TRACKER</span><h2>Upcoming and past sessions</h2></div></div>
+{% if records %}<div class="table-wrap card"><table><thead><tr><th>Date</th><th>Status</th><th>Clinician</th><th>Note</th><th>Update</th></tr></thead><tbody>{% for record in records %}<tr><td>{{ record.session_at }}</td><td><span class="status status-{{ record.status|lower }}">{{ record.status }}</span></td><td>{{ record.clinician_name or '—' }}</td><td>{{ record.notes or '—' }}</td><td><form method="post" action="{{ url_for('update_dialysis_status', schedule_id=record.id) }}" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label class="sr-only" for="dialysis-{{ record.id }}">Update session status</label><select id="dialysis-{{ record.id }}" name="status"><option>Upcoming</option><option>Completed</option><option>Missed</option></select><button class="button button-small button-outline" type="submit">Save</button></form></td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty-state card"><h3>No dialysis sessions recorded</h3><p>Add the schedule shared by your treating clinician.</p></div>{% endif %}</section>
+<section class="section-block">
+  <div class="section-heading"><div><span class="eyebrow">NAGPUR DIRECTORY</span><h2>Dialysis and kidney treatment facilities</h2></div></div>
+  {% if facilities %}<div class="result-grid">{% for item in facilities %}
+  <article class="card result-card"><span class="status {{ 'status-confirmed' if item.verification_status == 'verified' else 'status-neutral' }}">{{ item.verification_status|title }}</span><h3><a href="{{ url_for('facility_detail', facility_id=item.id) }}">{{ item.name }}</a></h3><p>{{ item.address or 'Address not supplied' }}, {{ item.city }}</p><p>{{ item.services or 'Services not supplied' }}</p><p class="small-note">Last checked: {{ item.last_checked or 'Not supplied' }} · <a href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">Source ↗</a></p></article>
+  {% endfor %}</div>{% else %}<p>No sourced facilities currently match this category.</p>{% endif %}
+</section>
+{% endif %}
+{% endblock %}

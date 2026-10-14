@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Blood Connect | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">COMMUNITY SUPPORT</span><h1>Blood Connect</h1><p>Record a need or register your interest in donating, with contact details kept private.</p></div></section>
+<div class="notice-panel notice-compact"><strong>No availability is guaranteed</strong><p>All sample donor and inventory information is fictional. A licensed blood bank must confirm supply. This page does not publicly show patient or donor contact details.</p></div>
+<section class="section-block"><div class="section-heading"><div><span class="eyebrow">DIRECTORY</span><h2>Blood requests</h2></div></div>
+<form method="get" class="card filter-form blood-filter">
+  <label>Blood group<select name="blood_group"><option value="">All groups</option>{% for group in blood_groups %}<option value="{{ group }}" {% if filters.blood_group == group %}selected{% endif %}>{{ group }}</option>{% endfor %}</select></label>
+  <label>City<input name="city" value="{{ filters.city }}" placeholder="Filter by city"></label>
+  <button class="button button-primary" type="submit">Filter</button><a class="button button-outline" href="{{ url_for('blood_connect') }}">Clear</a>
+</form>
+{% if requests %}<div class="result-grid blood-results">{% for item in requests %}<article class="card result-card"><div class="result-top"><span class="blood-type">{{ item.blood_group }}</span><span class="status status-{{ item.urgency|lower }}">{{ item.urgency }}</span></div><h3>{{ item.hospital_location }}</h3><p>{{ item.city }}</p><p class="small-note">{% if item.is_demo %}Fictional demo request{% else %}Request location only; personal contact details are private.{% endif %}</p><span class="status status-neutral">Availability not confirmed</span></article>{% endfor %}</div>
+{% else %}<div class="empty-state card"><h3>No requests match those filters</h3><p>Try another blood group or city.</p></div>{% endif %}
+</section>
+{% if g.user and g.user.role == 'patient' %}
+<section class="section-block"><div class="section-heading"><div><span class="eyebrow">PRIVATE REQUEST TRACKING</span><h2>Your blood requests</h2></div></div>
+{% if my_requests %}
+<div class="appointment-list">{% for item in my_requests %}
+  <article class="card appointment-card">
+    <div><span class="blood-type">{{ item.blood_group }}</span><span class="status status-{{ item.status|lower }}">{{ item.status }}</span><h3>{{ item.hospital_location }}</h3><p>{{ item.city }} · {{ item.urgency }}</p><small class="small-note">Status is managed by you; it does not confirm blood availability.</small></div>
+    <div class="appointment-actions">
+      {% if item.status != 'Open' %}<form method="post" action="{{ url_for('update_blood_request_status', request_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="status" value="Open"><button class="button button-small button-outline" type="submit">Reopen request</button></form>{% endif %}
+      {% if item.status == 'Open' %}<form method="post" action="{{ url_for('update_blood_request_status', request_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="status" value="Resolved"><button class="button button-small button-primary" type="submit">Mark no longer needed</button></form><form method="post" action="{{ url_for('update_blood_request_status', request_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="status" value="Cancelled"><button class="button button-small button-danger" type="submit">Cancel request</button></form>{% endif %}
+    </div>
+  </article>
+{% endfor %}</div>
+{% else %}<div class="empty-state card"><h3>No requests saved to your account</h3><p>Your request contact details are visible only to you.</p></div>{% endif %}
+</section>
+{% endif %}
+<section class="section-block"><div class="section-heading"><div><span class="eyebrow">DIRECTORY</span><h2>Blood-bank information</h2></div></div>
+<div class="notice-panel notice-compact"><strong>No live stock or e-RaktKosh API is configured</strong><p>Directory contact data can be stale. Confirm blood group availability, compatibility, hours, and eligibility directly with the blood bank before travel or treatment.</p><a href="{{ eraktkosh_url }}" target="_blank" rel="noopener noreferrer">Open official e-RaktKosh directory ↗</a></div>
+<form method="get" class="card filter-form blood-filter">
+  <label>Blood bank city<input name="bank_city" value="{{ bank_filters.city }}" placeholder="Nagpur"></label>
+  <label>Area<input name="area" value="{{ bank_filters.area }}" placeholder="Area or locality"></label>
+  <button class="button button-primary" type="submit">Filter blood banks</button>
+  <a class="button button-outline" href="{{ url_for('blood_connect') }}">Clear</a>
+</form>
+{% if directory_banks %}<div class="result-grid">{% for bank in directory_banks %}
+<article class="card result-card">
+  <div class="result-top"><span class="feature-icon coral">✚</span><span class="status {{ 'status-confirmed' if bank.verification_status == 'verified' else 'status-neutral' }}">{{ bank.verification_status|title }}</span></div>
+  <h3>{{ bank.name }}</h3><p>{{ bank.address or 'Address not supplied' }}{% if bank.area %}, {{ bank.area }}{% endif %}, {{ bank.city }}</p>
+  <dl class="detail-list"><div><dt>Phone</dt><dd>{{ bank.phone or 'Not supplied' }}</dd></div><div><dt>Last verified</dt><dd>{{ bank.last_verified or 'Not verified' }}</dd></div><div><dt>Last updated</dt><dd>{{ bank.last_updated }}</dd></div></dl>
+  {% if bank.website %}<p><a href="{{ bank.website }}" target="_blank" rel="noopener noreferrer">Official website ↗</a></p>{% endif %}
+  <p class="small-note">Source: <a href="{{ bank.source_url }}" target="_blank" rel="noopener noreferrer">{{ bank.source_url }}</a></p>
+  <span class="status status-neutral">Stock not available in this directory</span>
+</article>{% endfor %}</div>
+{% else %}<div class="empty-state card"><h3>No sourced blood-bank contact matches these filters</h3><p>Search official e-RaktKosh directly or import an authorized directory export.</p></div>{% endif %}
+<details class="section-block"><summary>Legacy fictional sample entries (not real facilities)</summary><div class="result-grid">{% for bank in blood_banks %}<article class="card result-card"><span class="status status-demo">Fictional demo</span><h3>{{ bank.name }}</h3><p>{{ bank.address }}, {{ bank.city }}</p><span class="status status-neutral">No inventory data</span></article>{% endfor %}</div></details>
+</section>
+{% if not g.user or g.user.role == 'patient' %}
+<div class="two-column section-block">
+<section class="card form-card"><span class="eyebrow">NEED BLOOD</span><h2>Create a request</h2><p class="form-hint">Your contact details are private. Blood group, urgency, and location are shown in the demo directory.</p>
+<form method="post" class="stack-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="form_type" value="request">
+  <label>Blood group<select name="blood_group" required><option value="">Choose</option>{% for group in blood_groups %}<option>{{ group }}</option>{% endfor %}</select></label>
+  <label>Hospital or location<input name="hospital_location" maxlength="200" required></label>
+  <label>City<input name="city" maxlength="100" required></label>
+  <label>Urgency<select name="urgency" required><option>Routine</option><option>Urgent</option><option>Critical</option></select></label>
+  <label>Contact name<input name="contact_name" maxlength="100" required></label>
+  <label>Contact phone<input type="tel" name="contact_phone" maxlength="20" required></label>
+  <label>Additional note<textarea name="details" maxlength="500" rows="3" placeholder="Avoid unnecessary medical details."></textarea></label>
+  <label class="checkbox-label"><input type="checkbox" name="request_consent" value="yes" required><span>I consent to storing this request and displaying its group, urgency, and location without my contact details.</span></label>
+  <button class="button button-primary button-full" type="submit">Save private request</button>
+</form></section>
+<section class="card form-card"><span class="eyebrow">DONOR INTEREST</span><h2>Register your interest</h2><p class="form-hint">Your details are private and are not shared publicly. This form does not verify eligibility.</p>
+<form method="post" class="stack-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="form_type" value="donor">
+  <label>Your name<input name="name" maxlength="100" required></label>
+  <label>Blood group<select name="blood_group" required><option value="">Choose</option>{% for group in blood_groups %}<option>{{ group }}</option>{% endfor %}</select></label>
+  <label>City<input name="city" maxlength="100" required></label>
+  <label>Contact phone<input type="tel" name="contact_phone" maxlength="20" required></label>
+  <label class="checkbox-label"><input type="checkbox" name="contact_consent" value="yes" required><span>I consent to JeevanSetu storing these details for this demo.</span></label>
+  <button class="button button-primary button-full" type="submit">Save donor interest privately</button>
+</form></section>
+</div>
+{% elif g.user %}
+<div class="notice-panel section-block"><strong>Patient-only forms</strong><p>Blood requests and donor-interest submissions are available to patient accounts. Directory entries remain fictional demo data.</p></div>
+{% endif %}
+{% endblock %}

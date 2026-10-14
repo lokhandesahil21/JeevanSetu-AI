@@ -1,0 +1,50 @@
+<form id="{{ assistant_form_id }}" class="ai-chat-form" method="post" action="{{ url_for('ai_chat') }}" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <div class="ai-chat-controls">
+    <label>Topic
+      <select name="topic">
+        <option value="general">General health information</option>
+        <option value="hospital">Find a hospital</option>
+        <option value="report">Explain a report</option>
+        <option value="cancer">Cancer care information</option>
+        <option value="dialysis">Dialysis guidance</option>
+        <option value="diet">Diet information</option>
+      </select>
+    </label>
+    <label>Language
+      <select name="language">
+        <option value="en">English</option>
+        <option value="hi">हिन्दी</option>
+        <option value="mr">मराठी</option>
+      </select>
+    </label>
+  </div>
+  <label class="ai-directory-filter">Directory category
+    <select name="facility_category">
+      <option value="">Any / from question</option>
+      <option value="cancer">Cancer / oncology</option>
+      <option value="dialysis">Dialysis / kidney</option>
+      <option value="hospital">General hospital</option>
+      <option value="blood_bank">Blood bank (no live stock)</option>
+      <option value="doctor">Doctor / specialty</option>
+    </select>
+  </label>
+  <label class="ai-directory-filter">Area or city
+    <input name="facility_location" maxlength="150" placeholder="Nagpur or locality">
+  </label>
+  <label class="ai-chat-input-label">Your question
+    <textarea name="message" maxlength="2000" rows="{{ 2 if assistant_compact else 4 }}" placeholder="Ask in English, Hindi, or Marathi…"></textarea>
+  </label>
+  <details class="ai-report-attach">
+    <summary>Attach a report for explanation (optional)</summary>
+    <label>PDF or image, up to 8 MB
+      <input type="file" name="report" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg">
+    </label>
+    <label class="checkbox-label">
+      <input type="checkbox" name="report_consent" value="yes">
+      <span>I consent to send this report to OpenAI for explanation. I understand it is sensitive information and the response is not a diagnosis.</span>
+    </label>
+    <p class="small-note">Readable text is extracted from PDFs; PNG/JPEG images are processed by a vision-capable OpenAI model. Scanned PDFs are not supported. Files are processed in memory and not saved by this chat.</p>
+  </details>
+  <button class="button button-primary ai-chat-send" type="submit"><span>Send</span><span class="ai-chat-spinner" aria-hidden="true"></span></button>
+</form>

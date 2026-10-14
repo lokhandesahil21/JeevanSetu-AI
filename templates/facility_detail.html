@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ facility.name }} | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">FACILITY DETAILS</span><h1>{{ facility.name }}</h1><p>{{ facility.category|replace('_',' ')|title }} · {{ facility.city }}{% if facility.area %} · {{ facility.area }}{% endif %}</p></div><span class="status {{ 'status-confirmed' if facility.verification_status == 'verified' else 'status-neutral' }}">{{ facility.verification_status|title }}</span></section>
+<div class="notice-panel notice-compact"><strong>Confirm before visiting</strong><p>Call the facility to confirm services, timings, appointments, and availability. Listing and verification metadata does not guarantee current service delivery.</p></div>
+<section class="card form-card section-block">
+  <dl class="detail-list">
+    <div><dt>Address</dt><dd>{{ facility.address or 'Not supplied' }}{% if facility.area %}, {{ facility.area }}{% endif %}, {{ facility.city }}</dd></div>
+    <div><dt>Phone</dt><dd>{% if facility.phone %}{% if callable_phone %}<a href="tel:{{ facility.phone|replace(' ','')|replace('(','')|replace(')','')|replace(';','')|replace('/','') }}">Call {{ facility.phone }}</a>{% else %}{{ facility.phone }} (call link unavailable for this format){% endif %}{% else %}Not supplied{% endif %}</dd></div>
+    <div><dt>Services</dt><dd>{{ facility.services or facility.specialty or 'Not supplied' }}</dd></div>
+    <div><dt>Opening hours</dt><dd>{{ facility.opening_hours or 'Not supplied; call to confirm' }}</dd></div>
+    <div><dt>Verification</dt><dd>{{ facility.verification_status|title }}{% if facility.source_verification_status %} — source says: {{ facility.source_verification_status }}{% endif %}</dd></div>
+    <div><dt>Last checked</dt><dd>{{ facility.last_checked or facility.last_verified or 'Not supplied' }}</dd></div>
+    <div><dt>Source URL</dt><dd><a href="{{ facility.source_url }}" target="_blank" rel="noopener noreferrer">{{ facility.source_url }}</a></dd></div>
+    {% if facility.notes %}<div><dt>Notes</dt><dd>{{ facility.notes }}</dd></div>{% endif %}
+  </dl>
+  {% if map_url %}<a class="button button-outline" href="{{ map_url }}" target="_blank" rel="noopener noreferrer">Open map{% if has_coordinates %} using supplied coordinates{% else %} using listed address{% endif %} ↗</a>{% endif %}
+  {% if facility.category == 'blood_bank' %}<p class="notice-panel section-block"><strong>Blood stock is not shown as real availability.</strong> The workbook's stock field is retained for administrator review only. Confirm directly with the blood bank or <a href="https://eraktkosh.mohfw.gov.in/" target="_blank" rel="noopener noreferrer">e-RaktKosh</a>.</p>{% endif %}
+</section>
+<p class="section-block"><a href="{{ url_for('directory', category=facility.category, city=facility.city) }}">← Back to matching directory results</a></p>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Provider registration | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">PROVIDER REGISTRATION</span><h1>Submit a healthcare listing</h1><p>Hospitals, centres, blood banks, and clinicians may submit sourced public information for review.</p></div></section>
+<div class="notice-panel notice-compact"><strong>Not published automatically</strong><p>Submissions remain pending until administrator verification. Provide an official HTTPS source; do not submit patient information.</p></div>
+<section class="card form-card">
+  <form method="post" class="form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Name<input name="name" maxlength="200" required></label>
+    <label>Category<select name="category" required><option value="">Choose</option><option value="cancer">Cancer / oncology</option><option value="dialysis">Dialysis / kidney</option><option value="hospital">General / multispecialty hospital</option><option value="blood_bank">Blood bank</option><option value="doctor">Doctor / clinician</option></select></label>
+    <label>City / district<input name="city" maxlength="100" value="Nagpur" required></label>
+    <label>Area<input name="area" maxlength="150"></label>
+    <label class="field-wide">Address<input name="address" maxlength="400"></label>
+    <label>Phone<input name="phone" type="tel" maxlength="40"></label>
+    <label>Official website (HTTPS)<input name="website" type="url" maxlength="500" placeholder="https://"></label>
+    <label class="field-wide">Specialty / services<input name="specialty" maxlength="300"></label>
+    <label class="field-wide">Official source URL (HTTPS)<input name="source_url" type="url" maxlength="500" required placeholder="https://"></label>
+    <div class="field-wide"><button class="button button-primary" type="submit">Submit for administrator review</button></div>
+  </form>
+</section>
+{% endblock %}

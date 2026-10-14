@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Provider listing | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">PROVIDER WORKSPACE</span><h1>Manage your linked listing</h1><p>Only the listing linked to your staff account can be edited. Changes return to pending review.</p></div></section>
+<section class="card form-card">
+  <form method="post" class="form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Name<input name="name" value="{{ listing.name }}" maxlength="200" required></label>
+    <label>Category<select name="category" required>{% for value, label in [('cancer','Cancer / oncology'),('dialysis','Dialysis / kidney'),('hospital','General / multispecialty'),('blood_bank','Blood bank'),('doctor','Doctor / clinician')] %}<option value="{{ value }}" {% if listing.category == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+    <label>City / district<input name="city" value="{{ listing.city }}" maxlength="100" required></label>
+    <label>Area<input name="area" value="{{ listing.area }}" maxlength="150"></label>
+    <label class="field-wide">Address<input name="address" value="{{ listing.address }}" maxlength="400"></label>
+    <label>Phone<input name="phone" value="{{ listing.phone }}" maxlength="40"></label>
+    <label>Website<input name="website" value="{{ listing.website }}" maxlength="500"></label>
+    <label class="field-wide">Specialty<input name="specialty" value="{{ listing.specialty }}" maxlength="300"></label>
+    <label class="field-wide">Official source URL<input name="source_url" value="{{ listing.source_url }}" maxlength="500" required></label>
+    <div class="field-wide"><button class="button button-primary" type="submit">Submit changes for review</button></div>
+  </form>
+</section>
+<section class="section-block card form-card">
+  <span class="eyebrow">AVAILABILITY</span><h2>Provider-published appointment slots</h2>
+  {% if listing.verification_status == 'verified' %}
+  <form method="post" class="form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="form_type" value="slot">
+    <label>Available date and time<input type="datetime-local" name="slot_at" required></label>
+    <div class="field-wide"><button class="button button-primary" type="submit">Publish slot</button></div>
+  </form>
+  {% else %}<p class="form-hint">Only a verified listing can publish slots. Listing status: {{ listing.verification_status }}.</p>{% endif %}
+  {% if slots %}<div class="card table-wrap"><table><thead><tr><th>Time</th><th>Status</th></tr></thead><tbody>{% for slot in slots %}<tr><td>{{ slot.slot_at }}</td><td>{{ slot.status }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+</section>
+<section class="section-block">
+  <div class="section-heading"><h2>Patient appointment requests</h2></div>
+  {% if provider_appointments %}
+  <div class="appointment-list">{% for appointment in provider_appointments %}
+    <article class="card appointment-card"><div><h3>{{ appointment.patient_name }}</h3><p>{{ appointment.slot_at }} · {{ appointment.visit_reason or 'No note' }}</p><span class="status status-{{ appointment.status|lower }}">{{ appointment.status }}</span></div>
+    {% if appointment.status == 'Requested' %}<div class="appointment-actions">
+      <form method="post" action="{{ url_for('update_provider_appointment', appointment_id=appointment.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="status" value="Confirmed"><button class="button button-small button-primary" type="submit">Confirm</button></form>
+      <form method="post" action="{{ url_for('update_provider_appointment', appointment_id=appointment.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="status" value="Cancelled"><button class="button button-small button-danger" type="submit">Cancel</button></form>
+    </div>{% endif %}</article>
+  {% endfor %}</div>{% else %}<div class="empty-state card"><p>No appointment requests yet.</p></div>{% endif %}
+</section>
+{% endblock %}

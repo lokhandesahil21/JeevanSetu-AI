@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Doctor schedule | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">AUTHORIZED CLINICIAN VIEW</span><h1>My appointment schedule</h1><p>Only appointments linked to your assigned doctor profile are shown.</p></div></section>
+{% if appointments %}
+<div class="appointment-list">{% for appointment in appointments %}
+  <article class="card appointment-card"><div><span class="status status-{{ appointment.status|lower }}">{{ appointment.status }}</span><h3>{{ appointment.slot_at|replace('T', ' at ') }}</h3><p>Patient: {{ appointment.patient_name }}</p><p>Visit note: {{ appointment.visit_reason or 'No note provided' }}</p></div>
+    {% if appointment.status in ['Pending', 'Confirmed'] %}<div class="appointment-actions">{% if appointment.status == 'Pending' %}<form method="post" action="{{ url_for('update_appointment_status', appointment_id=appointment.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="status" value="Confirmed"><button class="button button-small button-primary" type="submit">Confirm</button></form>{% endif %}<form method="post" action="{{ url_for('update_appointment_status', appointment_id=appointment.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="status" value="Completed"><button class="button button-small button-outline" type="submit">Mark completed</button></form></div>{% endif %}
+  </article>
+{% endfor %}</div>
+{% else %}<div class="empty-state card"><h2>No appointments scheduled</h2><p>Appointments for your linked doctor profile will appear here.</p></div>{% endif %}
+{% endblock %}

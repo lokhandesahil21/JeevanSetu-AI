@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Find Hospitals | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">CARE DIRECTORY</span><h1>Find hospitals</h1><p>Search verified listings and view the details shared with this demo platform.</p></div><a class="button button-primary" href="{{ url_for('submit_hospital') }}">＋ Submit a listing</a></section>
+<div class="notice-panel notice-compact"><strong>Demo directory notice</strong><p>Listings marked fictional are sample data, not real facilities or confirmed services. New listings stay hidden until an administrator verifies them.</p></div>
+<form method="get" action="{{ url_for('hospitals') }}" class="card filter-form">
+  <label>Hospital name<input name="name" value="{{ filters.get('name', '') }}" placeholder="Search name"></label>
+  <label>City<input name="city" value="{{ filters.get('city', '') }}" placeholder="e.g. Pune"></label>
+  <label>Area<input name="area" value="{{ filters.get('area', '') }}" placeholder="e.g. Kothrud"></label>
+  <label>Specialty<input name="specialty" value="{{ filters.get('specialty', '') }}" placeholder="e.g. Oncology"></label>
+  <button class="button button-primary" type="submit">Search</button>
+  <a class="button button-outline" href="{{ url_for('hospitals') }}">Clear</a>
+</form>
+{% if show_submission %}
+<section class="card form-card section-block">
+  <div class="section-heading"><div><span class="eyebrow">COMMUNITY SUBMISSION</span><h2>Submit a hospital listing</h2></div><span class="status status-pending">Admin review required</span></div>
+  <form method="post" class="form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Hospital name<input name="name" maxlength="200" required></label>
+    <label>City<input name="city" maxlength="200" required></label>
+    <label>Area<input name="area" maxlength="200"></label>
+    <label>Address<input name="address" maxlength="200" required></label>
+    <label>Phone<input name="phone" maxlength="200" type="tel"></label>
+    <label>Opening hours<input name="opening_hours" maxlength="200" placeholder="As provided by the facility"></label>
+    <label class="field-wide">Specialties<input name="specialties" maxlength="200" required placeholder="Separate specialties with commas"></label>
+    <div class="field-wide"><button class="button button-primary" type="submit">Submit for verification</button></div>
+  </form>
+</section>
+{% endif %}
+<section class="section-block">
+  <div class="section-heading"><h2>{{ hospitals|length }} listing{{ '' if hospitals|length == 1 else 's' }} found</h2></div>
+  {% if hospitals %}
+  <div class="result-grid">
+    {% for hospital in hospitals %}
+    <article class="card result-card">
+      <div class="result-top"><span class="feature-icon teal">⌖</span>{% if hospital.is_demo %}<span class="status status-demo">Fictional demo</span>{% else %}<span class="status status-confirmed">Verified listing</span>{% endif %}</div>
+      <h3>{{ hospital.name }}</h3>
+      <p>{{ hospital.address }}, {{ hospital.area }}{% if hospital.area %}, {% endif %}{{ hospital.city }}</p>
+      <dl class="detail-list"><div><dt>Phone</dt><dd>{{ hospital.phone or 'Not provided' }}</dd></div><div><dt>Hours</dt><dd>{{ hospital.opening_hours or 'Not provided' }}</dd></div><div><dt>Specialties</dt><dd>{{ hospital.specialties }}</dd></div></dl>
+      {% if not hospital.is_demo %}<a class="text-link" target="_blank" rel="noopener noreferrer" href="https://maps.google.com/?q={{ (hospital.address ~ ', ' ~ hospital.area ~ ', ' ~ hospital.city)|urlencode }}">Open address in map ↗</a>{% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state card"><span class="empty-icon">⌖</span><h3>No hospitals found</h3><p>Try a different city, area, or specialty, or submit a listing for verification.</p><a class="button button-outline" href="{{ url_for('hospitals') }}">Reset search</a></div>
+  {% endif %}
+</section>
+{% endblock %}

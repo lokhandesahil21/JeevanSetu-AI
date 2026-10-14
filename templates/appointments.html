@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Appointments | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">YOUR VISITS</span><h1>Appointments</h1><p>Request a visit from an available verified provider. Requests await provider confirmation.</p></div><a class="button button-outline" href="{{ url_for('doctors') }}">Browse verified availability →</a></section>
+<div class="notice-panel notice-compact"><strong>Requests are not external bookings</strong><p>Only verified provider-published slots are offered. Submitting a request does not contact an external hospital booking system. Seek emergency care without waiting for an appointment.</p></div>
+<section class="card form-card section-block" id="book-appointment">
+  <div class="section-heading"><div><span class="eyebrow">NEW REQUEST</span><h2>Request an appointment</h2></div></div>
+  {% if provider_slots %}
+  <form method="post" class="form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="booking_type" value="provider">
+    <label class="field-wide">Verified provider and published time
+      <select name="slot_id" required><option value="">Choose a provider-published slot</option>{% for slot in provider_slots %}<option value="{{ slot.id }}">{{ slot.provider_name }} — {{ slot.category|replace('_',' ')|title }}{% if slot.specialty %} / {{ slot.specialty }}{% endif %} · {{ slot.slot_at|replace('T', ' at ') }}</option>{% endfor %}</select>
+    </label>
+    <label class="field-wide">Optional visit note<textarea name="visit_reason" maxlength="500" rows="3" placeholder="Do not enter sensitive medical information here."></textarea></label>
+    <div class="field-wide"><button class="button button-primary" type="submit">Request provider appointment</button></div>
+  </form>
+  {% endif %}
+  {% if slots %}
+  <form method="post" class="form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label class="field-wide">Available doctor and time
+      <select name="slot_id" required><option value="">Choose a provider-published slot</option>{% for slot in slots %}<option value="{{ slot.id }}">{{ slot.hospital_name }} — {{ slot.doctor_name }} / {{ slot.specialty }} · {{ slot.slot_at|replace('T', ' at ') }}</option>{% endfor %}</select>
+    </label>
+    <label class="field-wide">Optional visit note<textarea name="visit_reason" maxlength="500" rows="3" placeholder="Do not enter sensitive medical information here."></textarea></label>
+    <div class="field-wide"><button class="button button-primary" type="submit">Request appointment</button></div>
+  </form>
+  {% else %}<div class="empty-state"><h3>No verified provider slots are currently published</h3><p>No availability has been invented. Contact a provider directly and check back for verified slots.</p></div>{% endif %}
+</section>
+<section class="section-block" id="my-appointments">
+  <div class="section-heading"><div><span class="eyebrow">PRIVATE TO YOUR ACCOUNT</span><h2>Your appointments</h2></div></div>
+  {% if appointments %}
+  <div class="appointment-list">
+  {% for appointment in appointments %}
+    <article class="card appointment-card">
+      <div class="appointment-main"><div class="appointment-date"><strong>{{ appointment.slot_at[8:10] }}</strong><span>{{ appointment.slot_at[5:7] }}/{{ appointment.slot_at[:4] }}</span></div><div><h3>{{ appointment.doctor_name }}</h3><p>{{ appointment.specialty }} · {{ appointment.hospital_name }}</p><p><strong>{{ appointment.slot_at|replace('T', ' at ') }}</strong></p></div></div>
+      <div class="appointment-actions"><span class="status status-{{ appointment.status|lower }}">{% if appointment.status == 'Pending' %}Awaiting hospital confirmation{% else %}{{ appointment.status }}{% endif %}</span>{% if appointment.doctor_demo or appointment.slot_demo %}<span class="status status-demo">Legacy demo</span>{% endif %}
+        {% if appointment.status in ['Pending', 'Confirmed'] %}
+        <form method="post" action="{{ url_for('cancel_appointment', appointment_id=appointment.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="button button-small button-danger" type="submit">Cancel</button></form>
+        {% if slots %}<form method="post" action="{{ url_for('reschedule_appointment', appointment_id=appointment.id) }}" class="reschedule-form"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label class="sr-only" for="slot-{{ appointment.id }}">New slot with same doctor</label><select id="slot-{{ appointment.id }}" name="slot_id" required><option value="">Reschedule…</option>{% for slot in slots if slot.doctor_name == appointment.doctor_name %}<option value="{{ slot.id }}">{{ slot.slot_at|replace('T', ' ') }}</option>{% endfor %}</select><button class="button button-small button-outline" type="submit">Move</button></form>{% endif %}
+        {% if 'video' in appointment.consultation_mode|default('', true)|lower %}<a class="button button-small button-outline" href="{{ url_for('consultation', appointment_id=appointment.id) }}">Video info</a>{% endif %}
+        {% endif %}
+      </div>
+    </article>
+  {% endfor %}
+  </div>
+  {% else %}<div class="empty-state card"><span class="empty-icon">◷</span><h3>No appointments yet</h3><p>When a verified provider publishes availability, you can request a slot here.</p></div>{% endif %}
+</section>
+<section class="section-block">
+  <div class="section-heading"><div><span class="eyebrow">PROVIDER REQUESTS</span><h2>Requests awaiting hospital confirmation</h2></div></div>
+  {% if provider_appointments %}
+  <div class="appointment-list">{% for item in provider_appointments %}
+    <article class="card appointment-card"><div><h3>{{ item.provider_name }}</h3><p>{{ item.slot_at|replace('T', ' at ') }} · {{ item.category|replace('_',' ')|title }}</p></div><div class="appointment-actions"><span class="status status-{{ item.status|lower }}">{{ item.status }}{% if item.status == 'Requested' %} — awaiting hospital confirmation{% endif %}</span>{% if item.status in ['Requested', 'Confirmed'] %}<form method="post" action="{{ url_for('cancel_provider_appointment', appointment_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="button button-small button-danger" type="submit">Cancel request</button></form>{% endif %}</div></article>
+  {% endfor %}</div>
+  {% else %}<div class="empty-state card"><p>No provider appointment requests have been made.</p></div>{% endif %}
+</section>
+{% endblock %}

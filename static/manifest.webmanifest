@@ -1,0 +1,25 @@
+{
+  "name": "JeevanSetu AI Healthcare",
+  "short_name": "JeevanSetu",
+  "description": "Healthcare information and care coordination for Nagpur.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f6f9f7",
+  "theme_color": "#087f78",
+  "icons": [
+    {
+      "src": "/static/icons/jeevansetu-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/jeevansetu-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

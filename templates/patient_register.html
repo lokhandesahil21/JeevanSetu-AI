@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Patient registration | JeevanSetu AI{% endblock %}
+{% block content %}
+<div class="category-page-top"><a class="button button-outline" href="{{ url_for('index') }}">← Back to Home</a></div>
+<section class="page-heading"><div><span class="eyebrow">PATIENT REGISTRATION</span><h1>Register for care access</h1><p>Registration creates a private dashboard and a unique patient registration number. It does not book an appointment or treatment.</p></div></section>
+<section class="card form-card auth-card">
+  <form method="post" class="form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Full name<input name="name" autocomplete="name" maxlength="100" required></label>
+    <label>Contact number<input name="mobile" type="tel" autocomplete="tel" maxlength="20" placeholder="+91 98765 43210" required></label>
+    <label>Date of birth<input name="date_of_birth" type="date"></label>
+    <label>Or age in years<input name="age" type="number" min="1" max="120"></label>
+    <label class="field-wide">Area / city<input name="area_city" maxlength="150" autocomplete="address-level2" required></label>
+    <label class="field-wide">Email (optional)<input name="email" type="email" maxlength="254" autocomplete="email"></label>
+    <label class="field-wide">Selected care category
+      <select name="care_category" required>
+        <option value="">Choose a category</option>
+        <option value="cancer" {% if selected_category == 'cancer' %}selected{% endif %}>Cancer</option>
+        <option value="dialysis" {% if selected_category == 'dialysis' %}selected{% endif %}>Dialysis</option>
+        <option value="blood_bank" {% if selected_category == 'blood_bank' %}selected{% endif %}>Blood Bank</option>
+      </select>
+    </label>
+    <label class="field-wide">Optional care-related information<textarea name="care_information" maxlength="500" rows="3" placeholder="Leave blank unless needed for your registration."></textarea></label>
+    <label class="checkbox-label field-wide"><input type="checkbox" name="care_information_consent" value="yes"><span>I consent to store the optional care-related information above. Leave unchecked and blank if you do not want to provide it.</span></label>
+    <label class="checkbox-label field-wide"><input type="checkbox" name="privacy_consent" value="yes" required><span>I consent to storing my registration details under the linked privacy terms. I understand this local demo does not provide emergency care.</span></label>
+    <div class="field-wide"><button class="button button-primary" type="submit">Complete patient registration</button></div>
+  </form>
+  <p class="form-hint">Enter either date of birth or age, not both. A mobile number is required for secure returning access.</p>
+</section>
+<section class="notice-panel section-block"><strong>Returning patients</strong><p>Use mobile verification. Twilio Verify SMS is available only when the administrator has configured provider credentials. In local demo mode, a code is shown on screen and no SMS is sent.</p><a href="{{ url_for('patient_access') }}">Retrieve registration →</a></section>
+{% endblock %}

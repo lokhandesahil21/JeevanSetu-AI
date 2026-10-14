@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Blood banks | JeevanSetu AI{% endblock %}
+{% block content %}
+<div class="category-page-top"><a class="button button-outline" href="{{ url_for('index') }}">← Back to Home</a><a class="button button-primary" href="{{ url_for('patient_register', category='blood_bank') }}">Patient Registration</a></div>
+<section class="page-heading"><div><span class="eyebrow">NAGPUR BLOOD BANK DIRECTORY</span><h1>Blood Banks</h1><p>Search sourced facility contacts by name, blood group information, or area.</p></div><a class="button button-outline" href="{{ url_for('blood_connect') }}">Blood Connect requests</a></section>
+<div class="notice-panel notice-compact"><strong>No live inventory integration</strong><p>Blood stock from static source files is not displayed as real availability. Call the blood bank to confirm current stock, compatibility, eligibility, and timings. Check the official e-RaktKosh directory: <a href="https://eraktkosh.mohfw.gov.in/" target="_blank" rel="noopener noreferrer">e-RaktKosh ↗</a>.</p></div>
+<form method="get" class="card filter-form">
+  <label>Name or service<input name="q" value="{{ filters.q }}" placeholder="Blood centre"></label>
+  <label>Area / locality<input name="area" value="{{ filters.area }}" placeholder="Area, locality, or address"></label>
+  <label>Blood group in source data<select name="blood_group"><option value="">All / not specified</option>{% for group in blood_groups %}<option value="{{ group }}" {% if filters.blood_group == group %}selected{% endif %}>{{ group }}</option>{% endfor %}</select></label>
+  <button class="button button-primary" type="submit">Search</button><a class="button button-outline" href="{{ url_for('blood_banks_directory') }}">Clear</a>
+</form>
+{% if facilities %}<section class="section-block"><div class="result-grid">{% for item in facilities %}
+<article class="card result-card"><div class="result-top"><span class="status {{ 'status-confirmed' if item.verification_status == 'verified' else 'status-neutral' }}">{{ item.verification_status|title }}</span></div>
+<h2><a href="{{ url_for('facility_detail', facility_id=item.id) }}">{{ item.name }}</a></h2><p>{{ item.address or 'Information not available' }}{% if item.area %}, {{ item.area }}{% endif %}{% if item.city %}, {{ item.city }}{% endif %}</p>
+<dl class="detail-list">
+  <div><dt>Contact number</dt><dd>{% if item.phone and callable_phones[item.id] %}<a href="tel:{{ item.phone|replace(' ','')|replace('(','')|replace(')','')|replace(';','')|replace('/','') }}">{{ item.phone }}</a>{% elif item.phone %}{{ item.phone }}{% else %}Information not available{% endif %}</dd></div>
+  <div><dt>Blood group / stock in source</dt><dd>{{ item.blood_stock or 'Information not available' }}{% if item.blood_stock %} <span class="small-note">(source-reported, not live availability)</span>{% endif %}</dd></div>
+  <div><dt>Stock verification</dt><dd>Not independently verified as current inventory</dd></div>
+  <div><dt>Stock source last checked</dt><dd>{{ item.last_checked or 'Information not available' }}</dd></div>
+  <div><dt>Directory record last updated</dt><dd>{{ item.last_updated or 'Information not available' }}</dd></div>
+  <div><dt>Last verified</dt><dd>{{ item.last_verified or 'Information not available' }}</dd></div>
+</dl>
+<p class="small-note">Source: {% if item.source_url %}<a href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ item.source_url }}</a>{% else %}Information not available{% endif %}</p>
+</article>
+{% endfor %}</div></section>
+{% else %}<div class="empty-state card section-block"><h3>No blood bank records match</h3><p>Try a wider search or consult the official e-RaktKosh portal.</p></div>{% endif %}
+{% endblock %}

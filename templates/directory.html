@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Nagpur healthcare directory | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">NAGPUR HEALTHCARE DIRECTORY</span><h1>Find local care</h1><p>Search hospitals, cancer and dialysis care, blood banks, and clinicians when sourced information is available.</p></div><a class="button button-primary" href="{{ url_for('provider_register') }}">Register a provider</a></section>
+<div class="notice-panel notice-compact"><strong>Coverage is not complete</strong><p>This directory does not claim to include every facility in Nagpur city or district. Unverified entries are visibly marked. Confirm all contacts and services with the provider before relying on them.</p></div>
+<form method="get" action="{{ url_for('directory') }}" class="card filter-form">
+  <label>Facility, area, contact, or service<input name="q" value="{{ filters.q }}" placeholder="Name, locality, phone, or oncology"></label>
+  <label>Category<select name="category"><option value="">All categories</option>{% for value, label in [('cancer','Cancer / oncology'),('dialysis','Dialysis / kidney'),('hospital','General / multispecialty'),('blood_bank','Blood bank'),('doctor','Doctor / specialty')] %}<option value="{{ value }}" {% if filters.category == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+  <label>City / district<input name="city" value="{{ filters.city }}" placeholder="Nagpur"></label>
+  <label>Area / locality<input name="area" value="{{ filters.area }}" placeholder="Area or locality"></label>
+  <label>Ownership (when sourced)<select name="ownership"><option value="">All / not supplied</option><option value="government" {% if filters.ownership == 'government' %}selected{% endif %}>Government</option><option value="private" {% if filters.ownership == 'private' %}selected{% endif %}>Private</option></select></label>
+  <label>Specialty / service<input name="service" value="{{ filters.specialty }}" placeholder="Oncology, dialysis, etc."></label>
+  <label>Sort results<select name="sort"><option value="name" {% if filters.sort == 'name' %}selected{% endif %}>Name</option><option value="area" {% if filters.sort == 'area' %}selected{% endif %}>Area</option><option value="updated" {% if filters.sort == 'updated' %}selected{% endif %}>Recently updated</option></select></label>
+  <button class="button button-primary" type="submit">Search directory</button><a class="button button-outline" href="{{ url_for('directory') }}">Clear</a>
+</form>
+<section class="section-block">
+  <div class="section-heading"><div><h2>{{ listings|length }} sourced listing{{ '' if listings|length == 1 else 's' }}</h2><p>Directory last updated: {{ last_updated or 'No imported records yet' }}</p></div><a class="button button-outline" href="{{ url_for('directory_template') }}">Download Excel submission template</a></div>
+  {% if category_stats %}<div class="stats-strip">{% for item in category_stats %}<span><strong>{{ item.count }}</strong> {{ {'cancer':'cancer / oncology','dialysis':'dialysis / kidney','hospital':'general hospital','blood_bank':'blood bank','doctor':'doctor'}[item.category] }}</span>{% endfor %}</div>{% endif %}
+  {% if latest_import %}<p class="small-note">Latest import: {{ latest_import.imported_at }} · {{ latest_import.inserted }} new, {{ latest_import.updated }} updated, {{ latest_import.unchanged }} unchanged, {{ latest_import.skipped }} skipped, {{ latest_import.flagged }} flagged for review.</p>{% endif %}
+  {% if listings %}
+  <div class="result-grid">
+  {% for item in listings %}
+    <article class="card result-card">
+      <div class="result-top"><span class="feature-icon teal">⌖</span><span class="status {{ 'status-confirmed' if item.verification_status == 'verified' else 'status-neutral' }}">{{ item.verification_status|title }}</span></div>
+      <h3><a href="{{ url_for('facility_detail', facility_id=item.id) }}">{{ item.name }}</a></h3><p class="specialty">{{ {'cancer':'Cancer / oncology','dialysis':'Dialysis / kidney','hospital':'General / multispecialty','blood_bank':'Blood bank','doctor':'Doctor'}[item.category] }}</p>
+      <p>{{ item.address or 'Address not supplied' }}{% if item.area %}, {{ item.area }}{% endif %}, {{ item.city }}</p>
+      <dl class="detail-list">
+        <div><dt>Phone</dt><dd>{{ item.phone or 'Not supplied' }}</dd></div>
+        <div><dt>Ownership</dt><dd>{{ item.ownership_type|title if item.ownership_type != 'unknown' else 'Not supplied' }}</dd></div>
+        <div><dt>Services</dt><dd>{{ item.services or item.specialty or 'Not supplied' }}</dd></div>
+        <div><dt>Last checked</dt><dd>{{ item.last_checked or item.last_verified or 'Not supplied' }}</dd></div>
+        <div><dt>Last updated</dt><dd>{{ item.last_updated }}</dd></div>
+      </dl>
+      <ul class="quality-flags">
+        {% if not item.phone %}<li>Phone number missing</li>{% endif %}
+        {% if item.latitude is none or item.longitude is none %}<li>Coordinates missing</li>{% endif %}
+        {% if not item.address %}<li>Address incomplete</li>{% endif %}
+        {% if item.last_checked and item.last_checked[:10] < stale_cutoff %}<li>Check date may be outdated</li>{% endif %}
+        {% if item.potentially_duplicate %}<li>Possible duplicate; needs review</li>{% endif %}
+      </ul>
+      {% if item.website %}<p><a href="{{ item.website }}" target="_blank" rel="noopener noreferrer">Official website ↗</a></p>{% endif %}
+      <p class="small-note">Source: <a href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ item.source_url }}</a></p>
+    </article>
+  {% endfor %}
+  </div>
+  {% else %}<div class="empty-state card"><h3>No directory records match</h3><p>Import an authorized official export or submit a provider record for administrator review.</p></div>{% endif %}
+</section>
+{% if workbook_analysis %}<section class="section-block card form-card"><span class="eyebrow">SOURCE WORKBOOK — DATA ANALYSIS</span><h2>Starter directory notes</h2><p class="small-note">These figures and interpretations are transcribed from the workbook's Data Analysis sheet, not an independently verified coverage claim.</p><div class="table-wrap"><table><thead><tr><th>Metric</th><th>Workbook value</th><th>Interpretation</th></tr></thead><tbody>{% for item in workbook_analysis %}<tr><td>{{ item.metric }}</td><td>{{ item.value }}</td><td>{{ item.interpretation }}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+<section class="section-block card form-card">
+  <span class="eyebrow">OFFICIAL STARTING SOURCES</span>
+  <h2>Public source directories</h2>
+  <ul class="source-list">
+    <li><a href="https://nagpur.gov.in/public-utility-category/hospitals/" target="_blank" rel="noopener noreferrer">Nagpur District official hospital directory ↗</a> — listings require manual review or an authorized export; no automated scraping is enabled.</li>
+    <li><a href="https://ncinagpur.in/" target="_blank" rel="noopener noreferrer">National Cancer Institute Nagpur ↗</a> — source link is recorded; no contact or service details have been independently verified here.</li>
+    <li><a href="https://eraktkosh.mohfw.gov.in/" target="_blank" rel="noopener noreferrer">e-RaktKosh official blood bank directory ↗</a> — no live blood-stock feed is configured. Confirm availability directly with a blood bank.</li>
+  </ul>
+</section>
+{% endblock %}

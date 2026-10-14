@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Patient mobile access | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">SECURE PATIENT ACCESS</span><h1>Retrieve your registration</h1><p>Verify your mobile number to open your private patient dashboard.</p></div></section>
+<section class="card form-card auth-card">
+  <form method="post" class="stack-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="phase" value="request">
+    <label>Registered mobile number<input name="mobile" type="tel" autocomplete="tel" maxlength="20" value="{{ mobile }}" placeholder="+91 98765 43210" pattern="[+0-9() -]{10,20}" required></label>
+    <button class="button button-primary" type="submit">{% if awaiting_verification %}Resend verification code{% else %}Request verification code{% endif %}</button>
+  </form>
+  {% if otp_mode == 'demo' %}
+  <div class="notice-panel notice-compact section-block"><strong>Local demo verification — no SMS is sent</strong><p>This mode displays a one-time code locally for any valid number and is not suitable for production or real patient information. A successful code only opens an existing registration associated with that number.</p></div>
+  {% elif otp_mode == 'twilio' and not otp_configured %}
+  <div class="notice-panel notice-compact section-block"><strong>SMS verification is not configured</strong><p>The server is set to Twilio Verify, but required environment settings are missing. No SMS will be sent until an administrator configures them.</p></div>
+  {% elif otp_mode != 'twilio' %}
+  <div class="notice-panel notice-compact section-block"><strong>Patient verification is unavailable</strong><p>The server verification mode is invalid. Contact the administrator; no code was sent.</p></div>
+  {% endif %}
+  {% if demo_code %}<p class="demo-code"><strong>Local demo code:</strong> <code>{{ demo_code }}</code> <span>Expires in five minutes; no SMS was sent.</span></p>{% endif %}
+  {% if awaiting_verification %}
+  <form method="post" class="stack-form section-block">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="phase" value="verify">
+    <input type="hidden" name="mobile" value="{{ mobile }}">
+    <label>Six-digit verification code<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label>
+    {% if resend_cooldown_seconds %}<p class="small-note">Resend available in {{ resend_cooldown_seconds }} seconds. A maximum of five requests per 15 minutes is allowed.</p>{% endif %}
+    <button class="button button-primary" type="submit">Verify and open dashboard</button>
+  </form>
+  {% endif %}
+  {% if awaiting_verification and otp_mode == 'twilio' %}
+  <form method="post" class="stack-form section-block">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="phase" value="request">
+    <input type="hidden" name="mobile" value="{{ mobile }}">
+    <button class="button button-outline" type="submit" data-resend-seconds="{{ resend_cooldown_seconds }}" {% if resend_cooldown_seconds %}disabled{% endif %}>Resend SMS code</button>
+    {% if resend_cooldown_seconds %}<span class="small-note" data-resend-countdown aria-live="polite">{{ resend_cooldown_seconds }} seconds before resend.</span>{% endif %}
+  </form>
+  {% endif %}
+  <p class="form-switch">New patient? <a href="{{ url_for('patient_register') }}">Register here</a></p>
+</section>
+{% endblock %}

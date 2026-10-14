@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Create account' if mode == 'register' else 'Login' }} | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="auth-layout">
+  <div class="auth-aside"><span class="eyebrow">YOUR CARE, YOUR SPACE</span><h1>{{ 'Create your account' if mode == 'register' else 'Welcome back' }}</h1><p>JeevanSetu AI helps you organize healthcare coordination in one private place.</p><p class="small-note">Patient accounts are created here. Staff accounts must be created by an administrator using the local Flask command.</p></div>
+  <div class="card form-card">
+    <h2>{{ 'Sign up as a patient' if mode == 'register' else 'Sign in to your account' }}</h2>
+    <form method="post" class="stack-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      {% if mode == 'register' %}
+      <label>Full name<input name="name" autocomplete="name" maxlength="100" required></label>
+      {% endif %}
+      <label>Email address<input name="email" type="email" autocomplete="email" maxlength="254" required></label>
+      <label>Password<input name="password" type="password" autocomplete="{{ 'new-password' if mode == 'register' else 'current-password' }}" minlength="{{ 10 if mode == 'register' else 1 }}" maxlength="256" required></label>
+      {% if mode == 'register' %}<p class="form-hint">Use at least 10 characters. Your password is stored as a secure hash.</p>{% endif %}
+      <button class="button button-primary button-full" type="submit">{{ 'Create patient account' if mode == 'register' else 'Login' }}</button>
+    </form>
+    <p class="form-switch">{% if mode == 'register' %}Already registered? <a href="{{ url_for('login') }}">Login</a>{% else %}New to JeevanSetu? <a href="{{ url_for('register') }}">Create an account</a>{% endif %}</p>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Registration complete | JeevanSetu AI{% endblock %}
+{% block content %}
+<section class="confirmation-card card">
+  <span class="confirmation-icon" aria-hidden="true">✓</span>
+  <span class="eyebrow">PATIENT REGISTRATION</span>
+  <h1>Registration complete</h1>
+  <p>Your patient registration ID is:</p>
+  <p class="registration-number"><strong>{{ registration_number }}</strong></p>
+  <p>Keep this ID private. It cannot be used by itself to access your records.</p>
+  <div class="notice-panel notice-compact">
+    <strong>No appointment or treatment was booked</strong>
+    <p>Registration records your selected care category. Contact a facility directly to confirm next steps, services, eligibility, and availability.</p>
+  </div>
+  <div class="confirmation-actions">
+    <a class="button button-primary" href="{{ url_for(facility_endpoint) }}">View {{ {'cancer':'cancer', 'dialysis':'dialysis', 'blood_bank':'blood bank'}[category] }} facilities</a>
+    <a class="button button-outline" href="{{ url_for('index') }}">Back to Home</a>
+  </div>
+</section>
+{% endblock %}
